@@ -167,13 +167,14 @@ body {
   margin: 15px 0;
   position: relative;
   overflow: hidden;
+  contain: paint;
+  border-radius: 10px;
 }
 
 .project-banner {
-  width: 120%;
-  height: 120%;
+  width: 100%;
+  height: 100%;
   object-fit: cover;
-  transform: translate(0, 0);
   animation: movingBanner 12s ease-in-out infinite;
   filter: blur(2px);
 }
