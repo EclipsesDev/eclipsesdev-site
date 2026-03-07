@@ -83,7 +83,7 @@ async function initPanelPage() {
   if (!session.authenticated) {
     const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
     const returnParam = encodeURIComponent(currentPath);
-    window.location.href = `/projects/video-cloud/login/?return=${returnParam}`;
+    window.location.href = `/projects/video-cloud/login?return=${returnParam}`;
     return;
   }
 
@@ -106,7 +106,7 @@ async function playVideo(videoId) {
 window.playVideo = playVideo;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const isLoginPage = window.location.pathname.endsWith("/login/");
+  const isLoginPage = window.location.pathname.endsWith("/login");
   if (isLoginPage) {
     await initLoginPage();
   } else {

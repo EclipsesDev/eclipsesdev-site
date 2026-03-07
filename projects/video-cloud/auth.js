@@ -1,7 +1,7 @@
 const VideoCloudAuth = (() => {
   const CONFIG = {
     apiBase: "https://video-cloud-auth.eclipsesdev-api.workers.dev/api/video-auth",
-    loginPath: "/projects/video-cloud/login/",
+    loginPath: "/projects/video-cloud/login",
     defaultRedirect: "/projects/video-cloud/"
   };
 
@@ -37,7 +37,7 @@ const VideoCloudAuth = (() => {
     if (
       returnTarget &&
       returnTarget.startsWith("/projects/video-cloud/") &&
-      !returnTarget.includes("/login/")
+      !returnTarget.includes("/login")
     ) {
       return returnTarget;
     }
