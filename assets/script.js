@@ -31,6 +31,7 @@ async function loadChangelog() {
 
     const fragment = document.createDocumentFragment();
 
+    // Sort logs by date (newest first) test debug
     logs.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     logs.forEach(log => {
