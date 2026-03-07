@@ -3,6 +3,14 @@ h1 {
     margin-bottom: 30px;
 }
 
+.session-info {
+    text-align: center;
+    color: #7dc4ff;
+    margin-top: -18px;
+    margin-bottom: 24px;
+    font-size: 14px;
+}
+
 .video-grid {
     display: flex;
     flex-wrap: wrap;
@@ -34,4 +42,67 @@ h1 {
 .video-card p {
     font-size: 14px;
     color: #aaa;
+}
+
+.video-card button,
+.login-form button,
+#logout-btn {
+    background: #4da6ff;
+    color: #111;
+    border: none;
+    border-radius: 8px;
+    padding: 10px 14px;
+    cursor: pointer;
+    font-weight: 700;
+    transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.video-card button:hover,
+.login-form button:hover,
+#logout-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 14px rgba(77, 166, 255, 0.35);
+}
+
+.auth-screen {
+    max-width: 450px;
+}
+
+.auth-description {
+    text-align: center;
+    color: #aaa;
+    margin-top: -12px;
+    margin-bottom: 22px;
+}
+
+.login-form {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.login-form label {
+    font-size: 14px;
+    color: #ddd;
+}
+
+.login-form input {
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid #3f4b60;
+    background: #0f172a;
+    color: #fff;
+    outline: none;
+}
+
+.login-form input:focus {
+    border-color: #4da6ff;
+    box-shadow: 0 0 0 2px rgba(77, 166, 255, 0.2);
+}
+
+.login-error {
+    min-height: 20px;
+    color: #ff8b8b;
+    margin: 0;
+    font-size: 14px;
 }
