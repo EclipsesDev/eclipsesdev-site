@@ -31,6 +31,8 @@ async function loadChangelog() {
 
     const fragment = document.createDocumentFragment();
 
+    logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+
     logs.forEach(log => {
       const section = document.createElement("div");
       section.className = "log-section";
