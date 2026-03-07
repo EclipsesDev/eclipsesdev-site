@@ -100,10 +100,23 @@ async function playVideo(videoId) {
     return;
   }
 
-  alert(`Video ${videoId} playback is not connected yet.`);
-}
+  let existing = document.getElementById("video-player-container");
+  if (existing) existing.remove();
 
-window.playVideo = playVideo;
+  const container = document.createElement("div");
+  container.id = "video-player-container";
+
+  const video = document.createElement("video");
+  video.controls = true;
+  video.autoplay = true;
+
+  video.src = `/storage/video?id=${videoId}`;
+
+  container.appendChild(video);
+
+  const grid = document.querySelector(".video-grid");
+  grid.after(container);
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   const isLoginPage = window.location.pathname.endsWith("/login/") || window.location.pathname.endsWith("/login");
