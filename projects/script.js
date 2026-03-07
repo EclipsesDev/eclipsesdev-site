@@ -1,6 +1,6 @@
 async function hasVideoCloudSession() {
   try {
-    const response = await fetch("/api/video-auth/session", {
+    const response = await fetch("/video-auth/session", {
       method: "GET",
       credentials: "include"
     });
