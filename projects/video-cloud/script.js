@@ -100,22 +100,25 @@ async function playVideo(videoId) {
     return;
   }
 
-  let existing = document.getElementById("video-player-container");
-  if (existing) existing.remove();
+  const res = await fetch(`/storage/video?id=${videoId}`, {
+    method: "GET",
+    credentials: "include"
+  });
 
-  const container = document.createElement("div");
-  container.id = "video-player-container";
+  if (!res.ok) {
+    alert("Failed to load video: " + res.status);
+    return;
+  }
 
-  const video = document.createElement("video");
-  video.controls = true;
-  video.autoplay = true;
+  const blob = await res.blob();
+  const videoURL = URL.createObjectURL(blob);
 
-  video.src = `/storage/video?id=${videoId}`;
+  const videoEl = document.createElement("video");
+  videoEl.src = videoURL;
+  videoEl.controls = true;
+  videoEl.autoplay = true;
 
-  container.appendChild(video);
-
-  const grid = document.querySelector(".video-grid");
-  grid.after(container);
+  document.body.appendChild(videoEl);
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
