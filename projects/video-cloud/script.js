@@ -106,7 +106,7 @@ async function playVideo(videoId) {
 window.playVideo = playVideo;
 
 document.addEventListener("DOMContentLoaded", async () => {
-  const isLoginPage = window.location.pathname.endsWith("/login");
+  const isLoginPage = window.location.pathname.endsWith("/login/") || window.location.pathname.endsWith("/login");
   if (isLoginPage) {
     await initLoginPage();
   } else {
