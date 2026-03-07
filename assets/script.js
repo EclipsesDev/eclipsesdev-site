@@ -2,17 +2,13 @@ let changelogLoaded = false;
 
 function activateSection(id) {
   const sections = document.querySelectorAll(".section");
-  const buttons = document.querySelectorAll(".nav-bar button");
 
   sections.forEach(sec => {
-    sec.style.display = sec.id === id ? "block" : "none";
+    sec.hidden = sec.id !== id;
   });
 
-  buttons.forEach(btn => {
-    if (btn.dataset.section) {
-      btn.classList.toggle("active", btn.dataset.section === id);
-    }
-  });
+  document.querySelector(".nav-bar .active")?.classList.remove("active");
+  document.querySelector(`[data-section="${id}"]`)?.classList.add("active");
 
   if (id === "changelog" && !changelogLoaded) {
     loadChangelog();
@@ -20,55 +16,58 @@ function activateSection(id) {
   }
 }
 
-function loadChangelog() {
-  fetch("https://api.eclipsesdev.my.id/changelog/")
-    .then(res => res.ok ? res.text() : Promise.reject("Failed to load changelog"))
-    .then(text => {
-      const container = document.getElementById("changelog-logs");
-      container.innerHTML = "";
+async function loadChangelog() {
+  try {
+    const res = await fetch("https://api.eclipsesdev.my.id/changelog/");
 
-      const logs = text.split(/\n?Dev Log\s+/).filter(Boolean).reverse();
-      logs.forEach(log => {
-        const section = document.createElement("div");
-        section.className = "log-section";
+    if (!res.ok) {
+      throw new Error("Failed to fetch changelog");
+    }
 
-        const lines = log.trim().split("\n");
-        const titleText = "Dev Log " + lines[0];
+    const logs = await res.json();
 
-        const title = document.createElement("div");
-        title.className = "log-title";
-        title.textContent = titleText;
+    const container = document.getElementById("changelog-logs");
+    container.innerHTML = "".trim();
 
-        const devTitle = document.createElement("div");
-        devTitle.className = "log-project";
-        devTitle.textContent = lines[1]?.replace("Project: ", "").trim() || "";
+    const fragment = document.createDocumentFragment();
 
-        const list = document.createElement("ul");
-        lines.slice(2).forEach(line => {
-          if (line.trim().startsWith("-")) {
-            const li = document.createElement("li");
-            li.textContent = line.replace("-", "").trim();
-            list.appendChild(li);
-          }
-        });
+    logs.forEach(log => {
+      const section = document.createElement("div");
+      section.className = "log-section";
 
-        section.appendChild(title);
-        section.appendChild(devTitle);
-        section.appendChild(list);
-        container.appendChild(section);
+      const title = document.createElement("div");
+      title.className = "log-title";
+      title.textContent = `Dev Log ${log.date}`;
+
+      const project = document.createElement("div");
+      project.className = "log-project";
+      project.textContent = log.project;
+
+      const list = document.createElement("ul");
+
+      log.changes.forEach(change => {
+        const li = document.createElement("li");
+        li.textContent = change;
+        list.appendChild(li);
       });
-    })
-    .catch(err => {
-      console.error(err);
-      document.getElementById("changelog-logs").textContent =
-        "ERROR: Unable to load changelog.";
+
+      section.append(title, project, list);
+      fragment.appendChild(section);
     });
+
+    container.appendChild(fragment);
+
+  } catch (err) {
+    console.error("Changelog load error:", err);
+
+    const container = document.getElementById("changelog-logs");
+    container.innerHTML = "<p>Failed to load changelog.</p>";
+  }
 }
 
 document.querySelectorAll(".nav-bar button").forEach(button => {
   button.addEventListener("click", () => {
     const target = button.dataset.section;
-    //history.pushState(null, "", "/" + target);
     activateSection(target);
   });
 });
