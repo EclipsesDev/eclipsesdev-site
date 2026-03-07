@@ -21,7 +21,7 @@ async function openProject(project) {
     const isAuthenticated = await hasVideoCloudSession();
     window.location.href = isAuthenticated
       ? "/projects/video-cloud/"
-      : "/projects/video-cloud/login/";
+      : "/projects/video-cloud/login";
     return;
   }
 
