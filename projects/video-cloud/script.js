@@ -120,19 +120,22 @@ async function playVideo(videoId) {
   const wrapper = document.createElement("div");
   wrapper.classList.add("video-wrapper");
 
+  const closeBtn = document.createElement("button");
+  closeBtn.classList.add("close-video");
+  closeBtn.textContent = "✕";
+  closeBtn.addEventListener("click", () => {
+    container.removeChild(wrapper);
+    URL.revokeObjectURL(videoURL);
+  });
+
   const videoEl = document.createElement("video");
   videoEl.src = videoURL;
   videoEl.controls = true;
   videoEl.autoplay = false;
-  videoEl.title = `Video ${videoId}`;
 
   wrapper.appendChild(videoEl);
+  wrapper.appendChild(closeBtn);
   container.appendChild(wrapper);
-
-  wrapper.addEventListener("click", () => {
-    container.removeChild(wrapper);
-    URL.revokeObjectURL(videoURL);
-  });
 }
 
 document.addEventListener("DOMContentLoaded", async () => {
