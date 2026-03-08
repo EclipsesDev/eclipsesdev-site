@@ -93,11 +93,11 @@ async function loadVideos() {
     for (let id = 1; id <= maxId; id++) {
         try {
             const res = await fetch(`/video-api/storage/video?id=${id}`, {
-                method: "HEAD", // just check if it exists
+                method: "HEAD",
                 credentials: "include"
             });
 
-            if (!res.ok) continue; // skip if video doesn't exist
+            if (!res.ok) continue;
 
             const card = document.createElement("div");
             card.className = "video-card";
@@ -114,7 +114,6 @@ async function loadVideos() {
             container.appendChild(card);
 
         } catch (err) {
-            // ignore network errors for this ID
             continue;
         }
     }
