@@ -34,20 +34,13 @@ async function initPanelPage() {
     const session = await VideoCloudAuth.getSession();
 
     if (!session.authenticated) {
-        const currentPath =
-            `${window.location.pathname}${window.location.search}${window.location.hash}`;
-
+        const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
         const returnParam = encodeURIComponent(currentPath);
-
-        window.location.href =
-            `/projects/video-cloud/login?return=${returnParam}`;
-
+        window.location.href = `/projects/video-cloud/login?return=${returnParam}`;
         return;
     }
 
-    document
-        .getElementById("logout-btn")
-        .addEventListener("click", VideoCloudAuth.logout);
+    document.getElementById("logout-btn")?.addEventListener("click", VideoCloudAuth.logout);
 
     renderSessionInfo(session);
 
@@ -56,95 +49,85 @@ async function initPanelPage() {
 
 async function loadVideos() {
     const container = document.getElementById("video-grid");
-
     container.innerHTML = "Loading videos...";
 
-    try {
-        const res = await fetch("/video-api/storage/list", {
-            credentials: "include"
-        });
+    const maxId = 50; // try video IDs 1 - 50
+    container.innerHTML = "";
 
-        if (!res.ok) {
-            container.innerHTML = "Failed to load videos";
-            return;
-        }
+    for (let id = 1; id <= maxId; id++) {
+        try {
+            const res = await fetch(`/video-api/storage/video?id=${id}`, {
+                method: "HEAD", // just check if it exists
+                credentials: "include"
+            });
 
-        const videos = await res.json();
+            if (!res.ok) continue; // skip if video doesn't exist
 
-        container.innerHTML = "";
-
-        videos.forEach(video => {
             const card = document.createElement("div");
             card.className = "video-card";
 
             const img = document.createElement("img");
-            img.src = video.thumbnail || "/assets/img/favicon.ico";
+            img.src = `/assets/img/favicon.ico`; // fallback thumbnail
+            card.appendChild(img);
 
             const title = document.createElement("h3");
-            title.textContent = video.title || "Untitled";
-
-            card.appendChild(img);
+            title.textContent = `Video #${id}`;
             card.appendChild(title);
 
-            card.onclick = () => openVideo(video.id);
-
+            card.onclick = () => openVideo(id);
             container.appendChild(card);
-        });
 
-    } catch (err) {
-        container.innerHTML = "Video service unavailable";
+        } catch (err) {
+            // ignore network errors for this ID
+            continue;
+        }
+    }
+
+    if (!container.hasChildNodes()) {
+        container.innerHTML = "No videos found.";
     }
 }
-
-/* VIDEO PLAYER */
 
 async function openVideo(id) {
     const lightbox = document.getElementById("video-lightbox");
     const video = document.getElementById("video-player");
 
-    const res = await fetch(`/video-api/storage/video?id=${id}`, {
-        credentials: "include"
-    });
+    try {
+        const res = await fetch(`/video-api/storage/video?id=${id}`, {
+            credentials: "include"
+        });
 
-    if (!res.ok) {
-        alert("Video failed to load");
-        return;
-    }
-
-    const blob = await res.blob();
-    const url = URL.createObjectURL(blob);
-
-    video.src = url;
-
-    lightbox.style.display = "flex";
-
-    video.play();
-
-    function close() {
-        video.pause();
-        video.src = "";
-
-        URL.revokeObjectURL(url);
-
-        lightbox.style.display = "none";
-    }
-
-    document
-        .getElementById("close-video")
-        .onclick = close;
-
-    lightbox.onclick = (e) => {
-        if (e.target === lightbox) {
-            close();
+        if (!res.ok) {
+            alert("Video failed to load");
+            return;
         }
-    };
+
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
+
+        video.src = url;
+        lightbox.style.display = "flex";
+        video.play();
+
+        function close() {
+            video.pause();
+            video.src = "";
+            URL.revokeObjectURL(url);
+            lightbox.style.display = "none";
+        }
+
+        document.getElementById("close-video").onclick = close;
+
+        lightbox.onclick = e => {
+            if (e.target === lightbox) close();
+        };
+    } catch (err) {
+        alert("Video failed to load");
+    }
 }
 
-/* START */
-
 document.addEventListener("DOMContentLoaded", () => {
-    const isLoginPage =
-        window.location.pathname.endsWith("/login") ||
+    const isLoginPage = window.location.pathname.endsWith("/login") ||
         window.location.pathname.endsWith("/login/");
 
     if (!isLoginPage) {
