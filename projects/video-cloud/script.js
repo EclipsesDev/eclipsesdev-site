@@ -89,19 +89,19 @@ async function initPanelPage() {
 async function loadVideos() {
     const container = document.getElementById("video-grid");
     container.innerHTML = "Loading videos...";
+    container.innerHTML = "";
 
     const maxId = 50; // try video IDs 1 - 50
-    container.innerHTML = "";
 
     for (let id = 1; id <= maxId; id++) {
         try {
-            const res = await fetch(`/video-api/storage/video?id=${id}`, {
-                method: "HEAD",
+            const res = await fetch(`/video-api/storage/video-meta?id=${id}`, {
                 credentials: "include"
             });
 
             if (!res.ok) continue;
 
+            const data = await res.json();
             const card = document.createElement("div");
             card.className = "video-card";
 
@@ -110,7 +110,7 @@ async function loadVideos() {
             card.appendChild(img);
 
             const title = document.createElement("h3");
-            title.textContent = `Video #${id}`;
+            title.textContent = data.title || `Video #${id}`;
             card.appendChild(title);
 
             card.onclick = () => openVideo(id);
@@ -163,15 +163,6 @@ async function openVideo(id) {
         alert("Video failed to load");
     }
 }
-
-// document.addEventListener("DOMContentLoaded", () => {
-//     const isLoginPage = window.location.pathname.endsWith("/login") ||
-//         window.location.pathname.endsWith("/login/");
-
-//     if (!isLoginPage) {
-//         initPanelPage();
-//     }
-// });
 
 document.addEventListener("DOMContentLoaded", async () => { 
   const isLoginPage = window.location.pathname.endsWith("/login/") || window.location.pathname.endsWith("/login"); 
