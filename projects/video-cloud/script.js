@@ -24,7 +24,9 @@ async function handleLoginSubmit(event) {
       return;
     }
 
-    window.location.href = VideoCloudAuth.getReturnTarget();
+    const target = VideoCloudAuth.getReturnTarget() || "/projects/video-cloud/";
+    window.location.replace(target);
+
   } catch (error) {
     if (error?.status === 401) {
       showError("Invalid username or password.");
@@ -37,7 +39,8 @@ async function handleLoginSubmit(event) {
 async function initLoginPage() {
   const session = await VideoCloudAuth.getSession();
   if (session.authenticated) {
-      window.location.href = VideoCloudAuth.getReturnTarget() || "/projects/video-cloud/";
+      const target = VideoCloudAuth.getReturnTarget() || "/projects/video-cloud/";
+      window.location.replace(target); 
       return;
   }
 
