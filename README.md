@@ -1,6 +1,9 @@
 # INFORMATION
 
 This is website for testing deployment
+- About Me (Small Portofolio)
+- Oriental Development Changelog
+- Projects (Typing-Test & Video Clouds)
 
 # DISCLOSURE
 
