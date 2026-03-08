@@ -164,11 +164,21 @@ async function openVideo(id) {
     }
 }
 
-document.addEventListener("DOMContentLoaded", () => {
-    const isLoginPage = window.location.pathname.endsWith("/login") ||
-        window.location.pathname.endsWith("/login/");
+// document.addEventListener("DOMContentLoaded", () => {
+//     const isLoginPage = window.location.pathname.endsWith("/login") ||
+//         window.location.pathname.endsWith("/login/");
 
-    if (!isLoginPage) {
-        initPanelPage();
-    }
+//     if (!isLoginPage) {
+//         initPanelPage();
+//     }
+// });
+
+document.addEventListener("DOMContentLoaded", async () => { 
+  const isLoginPage = window.location.pathname.endsWith("/login/") || window.location.pathname.endsWith("/login"); 
+
+  if (isLoginPage) { 
+    await initLoginPage(); 
+  } else { 
+    await initPanelPage(); 
+  } 
 });
