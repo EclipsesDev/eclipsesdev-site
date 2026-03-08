@@ -123,7 +123,8 @@ async function playVideo(videoId) {
   const videoEl = document.createElement("video");
   videoEl.src = videoURL;
   videoEl.controls = true;
-  videoEl.autoplay = true;
+  videoEl.autoplay = false;
+  videoEl.title = `Video ${videoId}`;
 
   wrapper.appendChild(videoEl);
   container.appendChild(wrapper);
