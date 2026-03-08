@@ -31,7 +31,7 @@ function renderSessionInfo(session) {
 }
 
 async function initPanelPage() {
-    const session = await VideoCloudAuth.getSession();
+    const session = await VideoCloudAuth.getSession({ credentials: "include" });
 
     if (!session.authenticated) {
         const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
