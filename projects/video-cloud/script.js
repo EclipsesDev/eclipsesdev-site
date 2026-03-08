@@ -1,75 +1,86 @@
-function formatRemainingSeconds(totalSeconds) {
-    const seconds = Math.max(0, Number(totalSeconds) || 0);
-    const minutes = Math.floor(seconds / 60);
-    const hours = Math.floor(minutes / 60);
-    const restMinutes = minutes % 60;
-
-    if (hours <= 0) {
-        return `${restMinutes}m`;
-    }
-
-    return `${hours}h ${restMinutes}m`;
-}
-
-function renderSessionInfo(session) {
-    const sessionInfo = document.getElementById("session-info");
-
-    if (!sessionInfo || !session?.authenticated) {
-        return;
-    }
-
-    const now = Math.floor(Date.now() / 1000);
-    const remaining = Number(session.expiresAt || 0) - now;
-
-    const remainingText =
-        remaining > 0
-            ? ` (${formatRemainingSeconds(remaining)} left)`
-            : "";
-
-    sessionInfo.textContent =
-        `Signed in as ${session.username}${remainingText}`;
+function showError(message) {
+  const errorText = document.getElementById("login-error");
+  if (!errorText) return;
+  errorText.textContent = message;
 }
 
 async function handleLoginSubmit(event) {
-    event.preventDefault();
+  event.preventDefault();
 
-    const usernameInput = document.getElementById("username");
-    const passwordInput = document.getElementById("password");
+  const usernameInput = document.getElementById("username");
+  const passwordInput = document.getElementById("password");
+  if (!usernameInput || !passwordInput) return;
 
-    if (!usernameInput || !passwordInput) {
-        console.error("Login inputs missing!");
-        return;
+  showError("");
+
+  try {
+    const loginResult = await VideoCloudAuth.login(
+      usernameInput.value.trim(),
+      passwordInput.value
+    );
+
+    if (!loginResult?.authenticated) {
+      showError("Invalid username or password.");
+      return;
     }
 
-    const username = usernameInput.value.trim();
-    const password = passwordInput.value;
-
-    if (!username || !password) {
-        console.warn("Username or password empty");
-        showError("Enter username and password.");
-        return;
+    window.location.href = VideoCloudAuth.getReturnTarget();
+  } catch (error) {
+    if (error?.status === 401) {
+      showError("Invalid username or password.");
+      return;
     }
+    showError("Login service unreachable. Check your Worker route.");
+  }
+}
 
-    try {
-        const loginResult = await VideoCloudAuth.login(username, password);
-        console.log("Login response:", loginResult);
+async function initLoginPage() {
+  const session = await VideoCloudAuth.getSession();
+  if (session.authenticated) {
+    window.location.href = VideoCloudAuth.getReturnTarget();
+    return;
+  }
 
-        if (!loginResult || !loginResult.authenticated) {
-            console.warn("Login failed: invalid credentials");
-            showError("Invalid username or password.");
-            return;
-        }
+  const form = document.getElementById("login-form");
+  form?.addEventListener("submit", handleLoginSubmit);
+}
 
-        console.log("Login successful, redirecting...");
-        window.location.href = VideoCloudAuth.getReturnTarget();
-    } catch (err) {
-        console.error("Login error:", err);
-        if (err?.status === 401) {
-            showError("Invalid username or password.");
-        } else {
-            showError("Login service unreachable. Check your Worker route.");
-        }
-    }
+function formatRemainingSeconds(totalSeconds) {
+  const seconds = Math.max(0, Number(totalSeconds) || 0);
+  const minutes = Math.floor(seconds / 60);
+  const hours = Math.floor(minutes / 60);
+  const restMinutes = minutes % 60;
+
+  if (hours <= 0) return `${restMinutes}m`;
+  return `${hours}h ${restMinutes}m`;
+}
+
+function renderSessionInfo(session) {
+  const sessionInfo = document.getElementById("session-info");
+  if (!sessionInfo || !session?.authenticated) return;
+
+  const now = Math.floor(Date.now() / 1000);
+  const remaining = Number(session.expiresAt || 0) - now;
+  const remainingText = remaining > 0 ? ` (${formatRemainingSeconds(remaining)} left)` : "";
+  const username = session.username || "user";
+
+  sessionInfo.textContent = `Signed in as ${username}${remainingText}`;
+}
+
+async function initPanelPage() {
+  const session = await VideoCloudAuth.getSession();
+  if (!session.authenticated) {
+    const currentPath = `${window.location.pathname}${window.location.search}${window.location.hash}`;
+    const returnParam = encodeURIComponent(currentPath);
+    window.location.href = `/projects/video-cloud/login?return=${returnParam}`;
+    return;
+  }
+
+  const logoutButton = document.getElementById("logout-btn");
+  logoutButton?.addEventListener("click", VideoCloudAuth.logout);
+
+  renderSessionInfo(session);
+  loadVideos();
 }
 
 async function loadVideos() {
