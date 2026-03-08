@@ -8,13 +8,19 @@
   <link rel="stylesheet" href="/projects/video-cloud/style.css">
 </head>
 <body>
+
+  <nav class="nav-bar">
+      <a href="/projects/video-cloud"><button>Back</button></a>
+      <a href="/"><button>Home</button></a>
+  </nav>
+
   <form id="upload-form">
     <h1 class="upload-title">Upload Video</h1>
 
     <input type="text" id="video-title" name="title" placeholder="Video Title" required>
     <input type="text" id="video-description" name="description" placeholder="Description">
     <input type="file" id="video-file" accept="video/mp4" required>
-    
+
     <button type="submit">Upload Video</button>
   </form>
 
