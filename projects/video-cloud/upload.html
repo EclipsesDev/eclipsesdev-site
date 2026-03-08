@@ -32,7 +32,7 @@
         return;
       }
 
-      const res = await fetch("/upload-video", {
+      const res = await fetch("/video-api/upload-video", {
         method: "POST",
         body: formData,
         credentials: "include"
