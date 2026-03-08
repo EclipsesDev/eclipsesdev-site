@@ -12,60 +12,81 @@
 <body>
   <h1 class="upload-title">Upload Video</h1>
 
-  <form id="upload-form" enctype="multipart/form-data">
-    <input type="text" name="title" placeholder="Video Title" required>
-    <input type="text" name="description" placeholder="Description">
-    <input type="file" name="file" accept="video/mp4" required>
+  <form id="upload-form">
+    <input type="text" id="video-title" name="title" placeholder="Video Title" required>
+    <input type="text" id="video-description" name="description" placeholder="Description">
+    <input type="file" id="video-file" accept="video/mp4" required>
     <button type="submit">Upload Video</button>
   </form>
 
+  <progress id="progress-bar" value="0" max="100" style="display:none; width: 100%; margin-top: 10px;"></progress>
+
   <script src="/projects/video-cloud/auth.js"></script>
-
-  <input type="file" id="video-file" accept="video/mp4">
-  
-  <button id="upload-btn">Upload</button>
-
-  <progress id="progress-bar" value="0" max="100" style="display:none;"></progress>
-
   <script>
-  document.getElementById("upload-btn").addEventListener("click", async () => {
-    const file = document.getElementById("video-file").files[0];
+  const form = document.getElementById("upload-form");
+  const progressBar = document.getElementById("progress-bar");
+
+  form.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const fileInput = document.getElementById("video-file");
+    const titleInput = document.getElementById("video-title");
+    const descriptionInput = document.getElementById("video-description");
+
+    const file = fileInput.files[0];
     if (!file) return alert("Select a video!");
 
-    const res = await fetch("/video-api/upload-url", { method: "POST", credentials: "include" });
-    const { uploadUrl, filename } = await res.json();
+    const isAuthed = await VideoCloudAuth.isAuthenticated();
+    if (!isAuthed) {
+      await VideoCloudAuth.requireAuth();
+      return;
+    }
 
-    const progressBar = document.getElementById("progress-bar");
-    progressBar.style.display = "block";
+    try {
+      const res = await fetch("/video-api/upload-url", { method: "POST", credentials: "include" });
+      const { uploadUrl, filename } = await res.json();
 
-    const xhr = new XMLHttpRequest();
-    xhr.open("PUT", uploadUrl);
-    xhr.upload.onprogress = (e) => {
-      if (e.lengthComputable) {
-        progressBar.value = Math.round((e.loaded / e.total) * 100);
-      }
-    };
-    xhr.onload = () => {
-      progressBar.value = 100;
-      alert("Upload complete!");
-      progressBar.style.display = "none";
+      progressBar.style.display = "block";
+      progressBar.value = 0;
 
-      fetch("/video-api/save-video", {
+      await new Promise((resolve, reject) => {
+        const xhr = new XMLHttpRequest();
+        xhr.open("PUT", uploadUrl);
+        xhr.upload.onprogress = (e) => {
+          if (e.lengthComputable) {
+            progressBar.value = Math.round((e.loaded / e.total) * 100);
+          }
+        };
+        xhr.onload = () => {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            progressBar.value = 100;
+            resolve();
+          } else {
+            reject(new Error("Upload failed with status " + xhr.status));
+          }
+        };
+        xhr.onerror = () => reject(new Error("Upload failed due to network error"));
+        xhr.send(file);
+      });
+
+      await fetch("/video-api/save-video", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
+        credentials: "include",
         body: JSON.stringify({
-          title: file.name,
-          description: "Uploaded via Cloudflare Worker",
+          title: titleInput.value.trim() || file.name,
+          description: descriptionInput.value.trim() || "",
           filename
-        }),
-        credentials: "include"
+        })
       });
-    };
-    xhr.onerror = () => {
-      alert("Upload failed!");
+
+      alert("Upload complete!");
       progressBar.style.display = "none";
-    };
-    xhr.send(file);
+      form.reset();
+    } catch (err) {
+      alert(err.message);
+      progressBar.style.display = "none";
+    }
   });
   </script>
 </body>
