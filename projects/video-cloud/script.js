@@ -108,8 +108,8 @@ async function loadVideos() {
       const card = document.createElement("div");
       card.className = "video-card";
 
-      const img = document.createElement("img");
-      img.src = `/video-api/storage/video?id=${video.id}#t=1`; 
+      const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
+      img.src = thumbnail || '/assets/img/favicon.ico';
       card.appendChild(img);
 
       const title = document.createElement("h3");
@@ -125,6 +125,31 @@ async function loadVideos() {
     console.error(err);
     container.innerHTML = "Failed to load videos.";
   }
+}
+
+async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
+    return new Promise((resolve, reject) => {
+        const video = document.createElement("video");
+        video.src = videoUrl;
+        video.crossOrigin = "anonymous";
+        video.muted = true;
+
+        video.addEventListener("loadeddata", () => {
+            video.currentTime = seekTime;
+        });
+
+        video.addEventListener("seeked", () => {
+            const canvas = document.createElement("canvas");
+            canvas.width = video.videoWidth;
+            canvas.height = video.videoHeight;
+            const ctx = canvas.getContext("2d");
+            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+            const thumbnail = canvas.toDataURL("image/png");
+            resolve(thumbnail);
+        });
+
+        video.addEventListener("error", (e) => reject(e));
+    });
 }
 
 async function openVideo(id) {
