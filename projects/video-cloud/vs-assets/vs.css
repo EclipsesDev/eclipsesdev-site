@@ -1,0 +1,66 @@
+.vc-lightbox {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.9);
+  justify-content: center;
+  align-items: center;
+  z-index: 10000;
+}
+
+#vc-player {
+  max-width: 80%;
+  max-height: 80%;
+  border-radius: 10px;
+  background: black;
+}
+
+#vc-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+}
+
+#vc-play-btn {
+  font-size: 50px;
+  color: white;
+  background: rgba(0,0,0,0.5);
+  border: none;
+  border-radius: 50%;
+  padding: 20px;
+}
+
+#vc-controls {
+  position: absolute;
+  bottom: 20px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  justify-content: center;
+  background: rgba(0,0,0,0.5);
+  padding: 10px;
+}
+
+#vc-progress-container {
+  flex-grow: 1;
+  height: 5px;
+  background: #444;
+  border-radius: 3px;
+  cursor: pointer;
+  position: relative;
+}
+
+#vc-progress-bar {
+  height: 100%;
+  width: 0%;
+  background: #3b82f6;
+  border-radius: 3px;
+}

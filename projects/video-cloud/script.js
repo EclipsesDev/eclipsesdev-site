@@ -87,53 +87,67 @@ async function initPanelPage() {
 }
 
 async function loadVideos() {
-  const container = document.getElementById("video-grid");
-  if (!container) return;
+    const container = document.getElementById("video-grid");
+    if (!container) return;
 
-  container.innerHTML = "Loading videos...";
+    container.innerHTML = "Loading videos...";
 
-  try {
-    const res = await fetch("/video-api/storage/list", { credentials: "include" });
-    if (!res.ok) throw new Error("Failed to fetch video list");
+    try {
+        const res = await fetch("/video-api/storage/list", { credentials: "include" });
+        if (!res.ok) throw new Error("Failed to fetch video list");
 
-    const videos = await res.json();
-    container.innerHTML = "";
+        const videos = await res.json();
+        container.innerHTML = "";
 
-    if (!videos.length) {
-      container.innerHTML = "No videos found.";
-      return;
+        if (!videos.length) {
+            container.innerHTML = "No videos found.";
+            return;
+        }
+
+        const cards = videos.map(video => {
+            const card = document.createElement("div");
+            card.className = "video-card";
+
+            const img = document.createElement("img");
+            img.src = '/assets/img/favicon.ico';
+            card.appendChild(img);
+
+            const title = document.createElement("h3");
+            title.textContent = video.title || `Video #${video.id}`;
+            card.appendChild(title);
+
+            card.onclick = () => openVcVideoFromId(video.id);
+
+            container.appendChild(card);
+            return { video, img };
+        });
+
+        await Promise.allSettled(cards.map(async ({ video, img }) => {
+            try {
+                const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
+                img.src = thumbnail || img.src;
+            } catch {}
+        }));
+
+    } catch (err) {
+        console.error(err);
+        container.innerHTML = "Failed to load videos.";
     }
+}
 
-    const cards = videos.map(video => {
-      const card = document.createElement("div");
-      card.className = "video-card";
+async function openVcVideoFromId(id) {
+    try {
+        const res = await fetch(`/video-api/storage/video?id=${id}`, { credentials: "include" });
+        if (!res.ok) throw new Error("Video failed to load");
 
-      const img = document.createElement("img");
-      img.src = '/assets/img/favicon.ico'; // default fallback
-      card.appendChild(img);
+        const blob = await res.blob();
+        const url = URL.createObjectURL(blob);
 
-      const title = document.createElement("h3");
-      title.textContent = video.title || `Video #${video.id}`;
-      card.appendChild(title);
-
-      card.onclick = () => openVideo(video.id);
-
-      container.appendChild(card);
-      return { video, img };
-    });
-
-    // Generate thumbnails last...
-    await Promise.allSettled(cards.map(async ({ video, img }) => {
-      try {
-        const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
-        img.src = thumbnail || img.src;
-      } catch {}
-    }));
-
-  } catch (err) {
-    console.error(err);
-    container.innerHTML = "Failed to load videos.";
-  }
+        openVcVideo(url);
+    } catch (err) {
+        alert("Video failed to load");
+        console.error(err);
+    }
 }
 
 async function getThumbnailFromVideo(videoUrl, seekTime = 1) {

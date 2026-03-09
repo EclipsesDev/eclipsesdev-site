@@ -8,6 +8,7 @@
     
     <link rel="icon" href="/assets/img/favicon.ico" type="image/x-icon">
     <link rel="stylesheet" href="/assets/style.css">
+    <link rel="stylesheet" href="/projects/video-cloud/vs-assets/vs.css">
     <link rel="stylesheet" href="/projects/video-cloud/style.css">
 </head>
 <body>
@@ -25,11 +26,25 @@
         <div id="video-grid"></div>
     </div>
 
-    <div id="video-lightbox">
-        <button id="close-video">x</button>
-        <video id="video-player" controls></video>
+    <div id="vc-lightbox" class="vc-lightbox">
+        <video id="vc-player" preload="metadata"></video>
+
+        <div id="vc-overlay">
+            <button id="vc-play-btn">►</button>
+        </div>
+
+        <div id="vc-controls">
+            <div id="vc-progress-container">
+            <div id="vc-progress-bar"></div>
+            </div>
+            <button id="vc-mute-btn">🔊</button>
+            <span id="vc-time">0:00 / 0:00</span>
+            <button id="vc-fullscreen-btn">⛶</button>
+            <button id="vc-close-btn">✕</button>
+        </div>
     </div>
 
+    <script src="/projects/video-cloud/vs-assets/vc.js"></script>
     <script src="/projects/video-cloud/auth.js"></script>
     <script src="/projects/video-cloud/script.js"></script>
 </body>
