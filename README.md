@@ -1,6 +1,6 @@
 # INFORMATION
 
-This is website for testing deployment
+This is website for deployment testing
 - About Me (Small Portofolio)
 - Oriental Development Changelog
 - Typing-Test Project
