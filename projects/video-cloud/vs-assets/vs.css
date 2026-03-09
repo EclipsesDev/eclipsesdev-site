@@ -17,19 +17,27 @@
 
 #vc-overlay {
   position: absolute;
-  inset: 0;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
   z-index: 10003;
+  pointer-events: all;
 }
 
 #vc-overlay {
-  opacity: 0;
+  opacity: 1;
   transition: opacity 0.2s ease;
 }
 
-.vc-video-container:hover #vc-overlay {
+.vc-video-container.playing #vc-overlay {
+  opacity: 0;
+}
+
+.vc-video-container.playing:hover #vc-overlay {
   opacity: 1;
 }
 

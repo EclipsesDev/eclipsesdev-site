@@ -1,6 +1,7 @@
 const vcLightbox = document.getElementById("vc-lightbox");
 const vcPlayer = document.getElementById("vc-player");
 const vcOverlay = document.getElementById("vc-overlay");
+const vcContainer = document.querySelector(".vc-video-container");
 const vcPlay = document.getElementById("vc-play-btn");
 const vcClose = document.getElementById("vc-close-btn");
 const vcProgress = document.getElementById("vc-progress-bar");
@@ -21,17 +22,22 @@ function openVcVideo(url) {
   vcPlayer.pause();
 }
 
-vcOverlay.addEventListener("click", () => {
+function togglePlay() {
   if (vcPlayer.paused) vcPlayer.play();
   else vcPlayer.pause();
-});
+}
+
+vcOverlay.addEventListener("click", togglePlay);
+vcOverlay.addEventListener("touchstart", togglePlay);
 
 vcPlayer.addEventListener("play", () => {
   vcPlay.textContent = "⏸";
+  vcContainer.classList.add("playing");
 });
 
 vcPlayer.addEventListener("pause", () => {
   vcPlay.textContent = "▶";
+  vcContainer.classList.remove("playing");
 });
 
 vcPlayer.addEventListener("timeupdate", () => {
