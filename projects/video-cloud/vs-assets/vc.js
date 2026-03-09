@@ -51,11 +51,19 @@ function updateMuteIcon() {
 }
 
 function updateFullscreenIcon() {
-  if (document.fullscreenElement) {
+  if (isFullscreenActive()) {
     setIcon(vcFullscreenIcon, VC_ICONS.minimize, "Exit fullscreen");
   } else {
     setIcon(vcFullscreenIcon, VC_ICONS.maximize, "Enter fullscreen");
   }
+}
+
+function isFullscreenActive() {
+  return Boolean(
+    document.fullscreenElement ||
+      document.webkitFullscreenElement ||
+      vcPlayer.webkitDisplayingFullscreen
+  );
 }
 
 function openVcVideo(url) {
@@ -110,14 +118,22 @@ vcMute.addEventListener("click", () => {
 });
 
 vcFullscreen.addEventListener("click", () => {
-  if (!document.fullscreenElement) {
+  if (!isFullscreenActive()) {
     if (vcLightbox.requestFullscreen) {
       vcLightbox.requestFullscreen();
+    } else if (vcLightbox.webkitRequestFullscreen) {
+      vcLightbox.webkitRequestFullscreen();
     } else {
       vcPlayer.webkitEnterFullscreen?.();
     }
   } else {
-    document.exitFullscreen?.();
+    if (document.exitFullscreen) {
+      document.exitFullscreen();
+    } else if (document.webkitExitFullscreen) {
+      document.webkitExitFullscreen();
+    } else {
+      vcPlayer.webkitExitFullscreen?.();
+    }
   }
 });
 
@@ -141,6 +157,8 @@ vcLightbox.addEventListener("click", (e) => {
 
 document.addEventListener("fullscreenchange", updateFullscreenIcon);
 document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
+vcPlayer.addEventListener("webkitbeginfullscreen", updateFullscreenIcon);
+vcPlayer.addEventListener("webkitendfullscreen", updateFullscreenIcon);
 
 updatePlayIcon();
 updateMuteIcon();

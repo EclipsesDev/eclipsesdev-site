@@ -49,7 +49,7 @@
   background: rgba(0,0,0,0.5);
   border: none;
   border-radius: 50%;
-  padding: 20px;
+  padding: clamp(10px, 2.8vw, 20px);
   cursor: pointer;
   pointer-events: all;
   z-index: 10004;
@@ -123,6 +123,7 @@
   align-items: center;
   max-width: 80vw;
   max-height: 80vh;
+  width: 100%;
 }
 
 .vc-icon {
@@ -134,8 +135,8 @@
 }
 
 .vc-play-icon {
-  width: 58px;
-  height: 58px;
+  width: clamp(34px, 10vw, 58px);
+  height: clamp(34px, 10vw, 58px);
 }
 
 .vc-control-icon {
@@ -147,4 +148,65 @@
   width: 24px;
   height: 24px;
   filter: invert(1);
+}
+
+.vc-lightbox:fullscreen,
+.vc-lightbox:-webkit-full-screen {
+  width: 100vw;
+  height: 100vh;
+  background: #000;
+}
+
+.vc-lightbox:fullscreen .vc-video-container,
+.vc-lightbox:-webkit-full-screen .vc-video-container {
+  width: 100vw;
+  height: 100vh;
+  max-width: none;
+  max-height: none;
+}
+
+.vc-lightbox:fullscreen #vc-player,
+.vc-lightbox:-webkit-full-screen #vc-player {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: 0;
+}
+
+.vc-lightbox:fullscreen #vc-close-btn,
+.vc-lightbox:-webkit-full-screen #vc-close-btn {
+  top: max(12px, env(safe-area-inset-top));
+  right: max(12px, env(safe-area-inset-right));
+}
+
+@media (max-width: 768px) {
+  #vc-controls {
+    left: 10px;
+    right: 10px;
+    bottom: max(10px, env(safe-area-inset-bottom));
+    padding: 8px;
+    gap: 8px;
+  }
+
+  #vc-time {
+    font-size: 12px;
+    white-space: nowrap;
+  }
+
+  #vc-close-btn {
+    width: 42px;
+    height: 42px;
+    top: max(12px, env(safe-area-inset-top));
+    right: 12px;
+  }
+
+  .vc-close-icon {
+    width: 20px;
+    height: 20px;
+  }
+
+  .vc-control-icon {
+    width: 20px;
+    height: 20px;
+  }
 }

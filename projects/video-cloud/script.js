@@ -124,7 +124,7 @@ async function loadVideos() {
 
         await Promise.allSettled(cards.map(async ({ video, img }) => {
             try {
-                const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
+                const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 2);
                 img.src = thumbnail || img.src;
             } catch {}
         }));
