@@ -1,5 +1,6 @@
 const vcLightbox = document.getElementById("vc-lightbox");
 const vcPlayer = document.getElementById("vc-player");
+const vcOverlay = document.getElementById("vc-overlay");
 const vcPlay = document.getElementById("vc-play-btn");
 const vcClose = document.getElementById("vc-close-btn");
 const vcProgress = document.getElementById("vc-progress-bar");
@@ -20,13 +21,18 @@ function openVcVideo(url) {
   vcPlayer.pause();
 }
 
-vcPlay.addEventListener("click", () => {
-  if(vcPlayer.paused) vcPlayer.play();
+vcOverlay.addEventListener("click", () => {
+  if (vcPlayer.paused) vcPlayer.play();
   else vcPlayer.pause();
 });
 
-vcPlayer.addEventListener("play", () => vcPlay.style.display = "none");
-vcPlayer.addEventListener("pause", () => vcPlay.style.display = "block");
+vcPlayer.addEventListener("play", () => {
+  vcPlay.textContent = "⏸";
+});
+
+vcPlayer.addEventListener("pause", () => {
+  vcPlay.textContent = "▶";
+});
 
 vcPlayer.addEventListener("timeupdate", () => {
   const percent = (vcPlayer.currentTime / vcPlayer.duration) * 100;
