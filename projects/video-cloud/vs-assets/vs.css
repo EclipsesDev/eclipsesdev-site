@@ -13,6 +13,8 @@
   max-height: 80%;
   border-radius: 10px;
   background: black;
+  position: relative;
+  z-index: 10002;
 }
 
 #vc-overlay {
@@ -25,6 +27,7 @@
   justify-content: center;
   align-items: center;
   cursor: pointer;
+  z-index: 10003;
 }
 
 #vc-play-btn {
@@ -34,6 +37,7 @@
   border: none;
   border-radius: 50%;
   padding: 20px;
+  z-index: 10004;
 }
 
 #vc-close-btn {
@@ -48,20 +52,22 @@
   height: 50px;
   border-radius: 50%;
   cursor: pointer;
-  z-index: 10001;
+  z-index: 10005;
 }
 
 #vc-controls {
   position: absolute;
   bottom: 20px;
-  left: 0;
-  width: 100%;
+  left: 20px;
+  right: 20px;
   display: flex;
   align-items: center;
   gap: 10px;
-  justify-content: center;
+  justify-content: space-between;
   background: rgba(0,0,0,0.5);
   padding: 10px;
+  border-radius: 8px;
+  z-index: 10004;
 }
 
 #vc-progress-container {
