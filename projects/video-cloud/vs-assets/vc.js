@@ -17,7 +17,7 @@ function formatTime(t) {
 function openVcVideo(url) {
   vcPlayer.src = url;
   vcLightbox.style.display = "flex";
-  vcPlayer.play();
+  vcPlayer.pause();
 }
 
 vcPlay.addEventListener("click", () => {
@@ -57,7 +57,9 @@ function closeVc() {
   vcPlayer.src = "";
   vcLightbox.style.display = "none";
 }
+
 vcClose.addEventListener("click", closeVc);
+
 vcLightbox.addEventListener("click", e => {
   if(e.target === vcLightbox) closeVc();
 });
