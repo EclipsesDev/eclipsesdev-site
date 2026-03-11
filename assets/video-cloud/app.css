@@ -134,8 +134,7 @@ h1 {
     margin: 0 auto;
 }
 
-form#upload-form input[type="text"],
-form#upload-form input[type="file"] {
+#upload-form input {
   padding: 12px 15px;
   border-radius: 8px;
   border: none;
@@ -144,11 +143,11 @@ form#upload-form input[type="file"] {
   color: #f9fafb;
 }
 
-form#upload-form input::placeholder {
+#upload-form input::placeholder {
   color: #9ca3af;
 }
 
-form#upload-form button {
+#upload-form button {
   padding: 12px 15px;
   border-radius: 8px;
   border: none;
