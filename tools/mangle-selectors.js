@@ -39,7 +39,7 @@ const cssClassRe = /\.([A-Za-z_][\w-]*)/g;
 const cssIdRe = /#([A-Za-z_][\w-]*)/g;
 const getElementByIdRe = /getElementById\(\s*(['"])([^'"]+)\1\s*\)/g;
 const selectorCallRe =
-  /(querySelectorAll?|matches|closest)\(\s*(['"])([^'"]+)\2\s*\)/g;
+  /(querySelector(?:All)?|matches|closest)\(\s*(['"])([^'"]+)\2\s*\)/g;
 const getElementsByClassNameRe =
   /getElementsByClassName\(\s*(['"])([^'"]+)\1\s*\)/g;
 const classNameAssignRe = /\.className\s*=\s*(['"])([^'"]+)\1/g;
