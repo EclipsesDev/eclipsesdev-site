@@ -40,13 +40,13 @@ jobs:
       - name: Prepare dist
         run: |
           mkdir -p dist
-          rsync -a --delete --exclude ".git" --exclude ".github" --exclude "node_modules" ./ dist/
+          rsync -a --delete --exclude ".git" --exclude ".github" --exclude "node_modules" --exclude "dist" ./ dist/
       - name: Mangle selectors
         run: |
           node tools/mangle-selectors.js dist
       - name: Install minifiers
         run: |
-          npm install -g html-minifier-terser@7.2.0 clean-css-cli@5.6.3
+          npm install -g html-minifier-terser@7.2.0 clean-css-cli@5.6.3 terser@5.27.2
       - name: Minify HTML
         run: |
           find dist -type f -name "*.html" -print0 | while IFS= read -r -d '' f; do
@@ -64,6 +64,11 @@ jobs:
         run: |
           find dist -type f -name "*.css" ! -name "*.min.css" -print0 | while IFS= read -r -d '' f; do
             cleancss -O2 -o "$f" "$f"
+          done
+      - name: Minify JS
+        run: |
+          find dist -type f -name "*.js" ! -name "*.min.js" -print0 | while IFS= read -r -d '' f; do
+            terser "$f" -o "$f" --compress --mangle
           done
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3

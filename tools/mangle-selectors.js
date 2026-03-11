@@ -40,6 +40,17 @@ const cssIdRe = /#([A-Za-z_][\w-]*)/g;
 const getElementByIdRe = /getElementById\(\s*(['"])([^'"]+)\1\s*\)/g;
 const selectorCallRe =
   /(querySelectorAll?|matches|closest)\(\s*(['"])([^'"]+)\2\s*\)/g;
+const getElementsByClassNameRe =
+  /getElementsByClassName\(\s*(['"])([^'"]+)\1\s*\)/g;
+const classNameAssignRe = /\.className\s*=\s*(['"])([^'"]+)\1/g;
+const setAttributeClassRe =
+  /setAttribute\(\s*(['"])class\1\s*,\s*(['"])([^'"]*)\2\s*\)/g;
+const setAttributeIdRe =
+  /setAttribute\(\s*(['"])id\1\s*,\s*(['"])([^'"]*)\2\s*\)/g;
+const classListCallRe = /classList\.(add|remove|toggle|contains)\(([^)]*)\)/g;
+const idRefAttrRe =
+  /\b(for|aria-controls|aria-labelledby|aria-describedby)\s*=\s*(['"])(.*?)\2/gi;
+const hrefHashRe = /\b(href|xlink:href)\s*=\s*(['"])#([^'"]+)\2/gi;
 
 const allFiles = walk(root);
 const htmlFiles = allFiles.filter((f) => f.endsWith(".html"));
@@ -96,6 +107,18 @@ for (const file of htmlFiles) {
     const mapped = idMap.get(value) || value;
     return `id=${quote}${mapped}${quote}`;
   });
+  content = content.replace(idRefAttrRe, (m, attr, quote, value) => {
+    const mapped = value
+      .trim()
+      .split(/\s+/)
+      .map((name) => idMap.get(name) || name)
+      .join(" ");
+    return `${attr}=${quote}${mapped}${quote}`;
+  });
+  content = content.replace(hrefHashRe, (m, attr, quote, value) => {
+    const mapped = idMap.get(value);
+    return mapped ? `${attr}=${quote}#${mapped}${quote}` : m;
+  });
   fs.writeFileSync(file, content);
 }
 
@@ -104,9 +127,10 @@ for (const file of cssFiles) {
   content = content.replace(cssClassRe, (m, name) =>
     classMap.has(name) ? `.${classMap.get(name)}` : m
   );
-  content = content.replace(cssIdRe, (m, name) =>
-    idMap.has(name) ? `#${idMap.get(name)}` : m
-  );
+  content = content.replace(cssIdRe, (m, name) => {
+    if (/^[0-9a-fA-F]{3,8}$/.test(name)) return m;
+    return idMap.has(name) ? `#${idMap.get(name)}` : m;
+  });
   fs.writeFileSync(file, content);
 }
 
@@ -116,10 +140,32 @@ for (const file of jsFiles) {
     const mapped = idMap.get(value);
     return mapped ? `getElementById(${quote}${mapped}${quote})` : m;
   });
+  content = content.replace(getElementsByClassNameRe, (m, quote, value) => {
+    const mapped = mapClassNames(value);
+    return `getElementsByClassName(${quote}${mapped}${quote})`;
+  });
   content = content.replace(selectorCallRe, (m, fn, quote, value) => {
     const mapped = mapSelectorString(value);
     return `${fn}(${quote}${mapped}${quote})`;
   });
+  content = content.replace(classNameAssignRe, (m, quote, value) => {
+    const mapped = mapClassNames(value);
+    return `.className = ${quote}${mapped}${quote}`;
+  });
+  content = content.replace(setAttributeClassRe, (m, q1, q2, value) => {
+    const mapped = mapClassNames(value);
+    return `setAttribute(${q1}class${q1}, ${q2}${mapped}${q2})`;
+  });
+  content = content.replace(setAttributeIdRe, (m, q1, q2, value) => {
+    const mapped = idMap.get(value) || value;
+    return `setAttribute(${q1}id${q1}, ${q2}${mapped}${q2})`;
+  });
+  content = content.replace(classListCallRe, (m, fn, args) => {
+    const updated = args.replace(/(['"])([^'"]+)\1/g, (ms, q, val) => {
+      const mapped = mapClassNames(val);
+      return `${q}${mapped}${q}`;
+    });
+    return `classList.${fn}(${updated})`;
+  });
   fs.writeFileSync(file, content);
 }
-
