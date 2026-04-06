@@ -38,7 +38,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let text = "";
 
             while (text.length < targetLength) {
-                const response = await fetch("https://api.eclipsesdev.my.id/sentence/");
+                const response = await fetch("https://api.eclipsesdev.top/sentence/");
                 const data = await response.json();
 
                 text += (text ? " " : "") + data.sentence;

@@ -18,7 +18,7 @@ function activateSection(id) {
 
 async function loadChangelog() {
   try {
-    const res = await fetch("https://api.eclipsesdev.my.id/changelog/");
+    const res = await fetch("https://api.eclipsesdev.top/changelog/");
 
     if (!res.ok) {
       throw new Error("Failed to fetch changelog");
