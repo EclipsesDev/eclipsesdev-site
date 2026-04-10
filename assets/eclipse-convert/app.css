@@ -1,0 +1,21 @@
+.browser-icon {
+  width: 80px;
+  height: 80px;
+  margin-bottom: 15px;
+}
+
+.project-desc a {
+  color: #4da6ff;
+  text-decoration: none;
+}
+
+.project-desc a:hover {
+  text-decoration: underline;
+}
+
+.subtitle {
+  text-align: center;
+  font-size: 15px;
+  color: #aaa;
+  margin-bottom: 0;
+}
