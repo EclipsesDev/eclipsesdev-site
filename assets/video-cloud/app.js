@@ -125,7 +125,7 @@ async function loadVideos() {
         await runWithConcurrency(cards, 2, async ({ video, img }) => {
             try {
                 // const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
-                const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`);
+                const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
                 img.src = thumbnail || img.src;
             } catch {}
         });
@@ -168,40 +168,73 @@ async function openVideoFromId(id) {
     }
 }
 
-function getThumbnailFromVideo(file, seekTo = 0.0) {
-    console.log("getting video cover for file: ", file);
-    return new Promise((resolve, reject) => {
-        const videoPlayer = document.createElement('video');
-        videoPlayer.setAttribute('src', URL.createObjectURL(file));
-        videoPlayer.load();
-        videoPlayer.addEventListener('error', (ex) => {
-            reject("error when loading video file", ex);
-        });
-        videoPlayer.addEventListener('loadedmetadata', () => {
-            if (videoPlayer.duration < seekTo) {
-                reject("video is too short.");
-                return;
-            }
-            setTimeout(() => {
-              videoPlayer.currentTime = seekTo;
-            }, 200);
-            videoPlayer.addEventListener('seeked', () => {
-                console.log('video is now paused at %ss.', seekTo);
-                const canvas = document.createElement("canvas");
-                canvas.width = videoPlayer.videoWidth;
-                canvas.height = videoPlayer.videoHeight;
-                const ctx = canvas.getContext("2d");
-                ctx.drawImage(videoPlayer, 0, 0, canvas.width, canvas.height);
-                ctx.canvas.toBlob(
-                    blob => {
-                        resolve(blob);
-                    },
-                    "image/jpeg",
-                    0.75 /* quality */
-                );
-            });
-        });
+async function getThumbnailFromVideo(videoUrl, seekTo = 1) {
+  const res = await fetch(videoUrl, { credentials: "include" });
+  if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
+
+  const blob = await res.blob();
+  const objectUrl = URL.createObjectURL(blob);
+
+  try {
+    return await new Promise((resolve, reject) => {
+      const video = document.createElement("video");
+      video.preload = "auto";
+      video.muted = true;
+      video.playsInline = true;
+
+      const timeoutId = window.setTimeout(() => {
+        cleanup();
+        reject(new Error("Thumbnail capture timed out"));
+      }, 10000);
+
+      const cleanup = () => {
+        window.clearTimeout(timeoutId);
+        video.pause();
+        video.removeAttribute("src");
+        video.load();
+      };
+
+      const capture = () => {
+        if (video.readyState < 2) return;
+        const canvas = document.createElement("canvas");
+        canvas.width = video.videoWidth || 320;
+        canvas.height = video.videoHeight || 180;
+        const ctx = canvas.getContext("2d");
+        if (!ctx) {
+          cleanup();
+          reject(new Error("Canvas not supported"));
+          return;
+        }
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        const dataUrl = canvas.toDataURL("image/jpeg", 0.8);
+        cleanup();
+        resolve(dataUrl);
+      };
+
+      video.addEventListener("error", () => {
+        cleanup();
+        reject(new Error("Video load error"));
+      }, { once: true });
+
+      video.addEventListener("loadedmetadata", () => {
+        const duration = Number.isFinite(video.duration) ? video.duration : 0;
+        const t = duration > 0 ? Math.min(seekTo, Math.max(0, duration - 0.1)) : 0;
+        if (t <= 0) {
+          capture();
+        } else {
+          video.currentTime = t;
+        }
+      }, { once: true });
+
+      video.addEventListener("seeked", capture, { once: true });
+      video.addEventListener("loadeddata", capture, { once: true });
+
+      video.src = objectUrl;
+      video.load();
     });
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 // async function getThumbnailFromVideo(videoUrl) {
