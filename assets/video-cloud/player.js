@@ -24,6 +24,7 @@ const PLAYER_ICONS = {
 
 const PLAYER_IDLE_DELAY_MS = 2000;
 let idleTimer = null;
+let fullscreenIconRafId = null;
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -34,8 +35,23 @@ function formatTime(seconds) {
 
 function setIcon(img, src, alt) {
   if (!img) return;
-  img.src = src;
-  img.alt = alt;
+  const nextUrl = new URL(src, window.location.origin).href;
+  const currentUrl = img.currentSrc || img.src || "";
+  if (currentUrl !== nextUrl) {
+    img.src = src;
+  }
+  if (img.alt !== alt) {
+    img.alt = alt;
+  }
+}
+
+function preloadIcon(src) {
+  const image = new Image();
+  image.src = src;
+}
+
+function preloadPlayerIcons() {
+  Object.values(PLAYER_ICONS).forEach(preloadIcon);
 }
 
 function updatePlayIcon() {
@@ -60,6 +76,14 @@ function updateFullscreenIcon() {
   } else {
     setIcon(fullscreenIcon, PLAYER_ICONS.maximize, "Enter fullscreen");
   }
+}
+
+function scheduleFullscreenIconUpdate() {
+  if (fullscreenIconRafId !== null) return;
+  fullscreenIconRafId = window.requestAnimationFrame(() => {
+    fullscreenIconRafId = null;
+    updateFullscreenIcon();
+  });
 }
 
 function setIdleState(isIdle) {
@@ -217,11 +241,12 @@ lightbox.addEventListener("click", (event) => {
   if (event.target === lightbox) closeVideoPlayer();
 });
 
-document.addEventListener("fullscreenchange", updateFullscreenIcon);
-document.addEventListener("webkitfullscreenchange", updateFullscreenIcon);
-player.addEventListener("webkitbeginfullscreen", updateFullscreenIcon);
-player.addEventListener("webkitendfullscreen", updateFullscreenIcon);
+document.addEventListener("fullscreenchange", scheduleFullscreenIconUpdate);
+document.addEventListener("webkitfullscreenchange", scheduleFullscreenIconUpdate);
+player.addEventListener("webkitbeginfullscreen", scheduleFullscreenIconUpdate);
+player.addEventListener("webkitendfullscreen", scheduleFullscreenIconUpdate);
 
 updatePlayIcon();
 updateMuteIcon();
 updateFullscreenIcon();
+preloadPlayerIcons();
