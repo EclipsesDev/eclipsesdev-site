@@ -164,15 +164,15 @@
 
 .video-lightbox:fullscreen,
 .video-lightbox:-webkit-full-screen {
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   background: #000;
 }
 
 .video-lightbox:fullscreen .video-player-shell,
 .video-lightbox:-webkit-full-screen .video-player-shell {
-  width: 100vw;
-  height: 100vh;
+  width: 100dvw;
+  height: 100dvh;
   max-width: none;
   max-height: none;
 }
@@ -181,7 +181,7 @@
 .video-lightbox:-webkit-full-screen #video-player {
   width: 100%;
   height: 100%;
-  object-fit: contain;
+  object-fit: cover;
   border-radius: 0;
 }
 
