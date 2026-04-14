@@ -155,40 +155,46 @@ async function openVideoFromId(id) {
     }
 }
 
-async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
+function captureThumbnail(videoSrc, seekTime = 1, useCrossOrigin = false) {
     return new Promise((resolve, reject) => {
         const video = document.createElement("video");
-        video.preload = "metadata";
+        video.preload = "auto";
         video.muted = true;
         video.playsInline = true;
+        video.setAttribute("playsinline", "");
 
-        const isSameOrigin =
-            videoUrl.startsWith("/") || videoUrl.startsWith(window.location.origin);
-        if (!isSameOrigin) {
+        if (useCrossOrigin) {
             video.crossOrigin = "anonymous";
         }
 
-        let cleaned = false;
+        let settled = false;
+        const timeout = window.setTimeout(() => {
+            fail(new Error("Thumbnail capture timed out"));
+        }, 8000);
+
         const cleanup = () => {
-            if (cleaned) return;
-            cleaned = true;
+            window.clearTimeout(timeout);
+            video.pause();
+            video.removeAttribute("src");
+            video.load();
             video.remove();
         };
 
-        const fail = (err) => {
+        const done = (result) => {
+            if (settled) return;
+            settled = true;
             cleanup();
-            reject(err);
+            resolve(result);
         };
 
-        video.addEventListener("error", fail);
+        const fail = (err) => {
+            if (settled) return;
+            settled = true;
+            cleanup();
+            reject(err instanceof Error ? err : new Error("Thumbnail capture failed"));
+        };
 
-        video.addEventListener("loadedmetadata", () => {
-            const duration = Number.isFinite(video.duration) ? video.duration : 0;
-            const safeTime = duration > 0 ? Math.min(seekTime, Math.max(0, duration - 0.1)) : 0;
-            video.currentTime = safeTime;
-        });
-
-        video.addEventListener("seeked", () => {
+        const drawFrame = () => {
             const canvas = document.createElement("canvas");
             canvas.width = video.videoWidth || 320;
             canvas.height = video.videoHeight || 180;
@@ -197,19 +203,59 @@ async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
                 fail(new Error("Canvas not supported"));
                 return;
             }
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
             try {
-                const thumbnail = canvas.toDataURL("image/png");
-                cleanup();
-                resolve(thumbnail);
+                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+                done(canvas.toDataURL("image/png"));
             } catch (err) {
                 fail(err);
             }
-        });
+        };
 
-        video.src = videoUrl;
+        video.addEventListener("error", () => fail(new Error("Video load error")), { once: true });
+        video.addEventListener("loadedmetadata", () => {
+            const duration = Number.isFinite(video.duration) ? video.duration : 0;
+            const safeTime = duration > 0 ? Math.min(seekTime, Math.max(0, duration - 0.1)) : 0;
+            if (safeTime <= 0) {
+                drawFrame();
+                return;
+            }
+            video.currentTime = safeTime;
+        }, { once: true });
+        video.addEventListener("seeked", drawFrame, { once: true });
+        video.addEventListener("loadeddata", () => {
+            if (video.currentTime === 0) {
+                drawFrame();
+            }
+        }, { once: true });
+
+        video.src = videoSrc;
         video.load();
     });
+}
+
+async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
+    const isSameOrigin =
+        videoUrl.startsWith("/") || videoUrl.startsWith(window.location.origin);
+
+    try {
+        return await captureThumbnail(videoUrl, seekTime, !isSameOrigin);
+    } catch (directErr) {
+        try {
+            const res = await fetch(videoUrl, { credentials: "include" });
+            if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
+            const blob = await res.blob();
+            const blobUrl = URL.createObjectURL(blob);
+            try {
+                return await captureThumbnail(blobUrl, seekTime, false);
+            } finally {
+                URL.revokeObjectURL(blobUrl);
+            }
+        } catch {
+            console.warn("Thumbnail generation failed:", directErr);
+            return null;
+        }
+    }
 }
 
 // async function openVideo(id) {
