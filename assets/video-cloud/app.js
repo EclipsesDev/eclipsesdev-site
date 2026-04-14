@@ -125,7 +125,7 @@ async function loadVideos() {
         await runWithConcurrency(cards, 2, async ({ video, img }) => {
             try {
                 // const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
-                const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
+                const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 3);
                 img.src = thumbnail || img.src;
             } catch {}
         });
