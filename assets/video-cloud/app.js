@@ -122,17 +122,29 @@ async function loadVideos() {
             return { video, img };
         });
 
-        await Promise.allSettled(cards.map(async ({ video, img }) => {
+        await runWithConcurrency(cards, 2, async ({ video, img }) => {
             try {
                 const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
                 img.src = thumbnail || img.src;
             } catch {}
-        }));
+        });
 
     } catch (err) {
         console.error(err);
         container.innerHTML = "Failed to load videos.";
     }
+}
+
+async function runWithConcurrency(items, concurrency, worker) {
+    const queue = [...items];
+    const runners = new Array(Math.max(1, concurrency)).fill(null).map(async () => {
+        while (queue.length) {
+            const item = queue.shift();
+            if (!item) return;
+            await worker(item);
+        }
+    });
+    await Promise.allSettled(runners);
 }
 
 async function openVideoFromId(id) {
@@ -162,6 +174,12 @@ function captureThumbnail(videoSrc, seekTime = 1, useCrossOrigin = false) {
         video.muted = true;
         video.playsInline = true;
         video.setAttribute("playsinline", "");
+        video.style.position = "fixed";
+        video.style.left = "-9999px";
+        video.style.top = "-9999px";
+        video.style.width = "1px";
+        video.style.height = "1px";
+        document.body.appendChild(video);
 
         if (useCrossOrigin) {
             video.crossOrigin = "anonymous";
@@ -170,10 +188,15 @@ function captureThumbnail(videoSrc, seekTime = 1, useCrossOrigin = false) {
         let settled = false;
         const timeout = window.setTimeout(() => {
             fail(new Error("Thumbnail capture timed out"));
-        }, 8000);
+        }, 12000);
+        let seekFallbackTimer = null;
 
         const cleanup = () => {
             window.clearTimeout(timeout);
+            if (seekFallbackTimer) {
+                window.clearTimeout(seekFallbackTimer);
+                seekFallbackTimer = null;
+            }
             video.pause();
             video.removeAttribute("src");
             video.load();
@@ -221,13 +244,11 @@ function captureThumbnail(videoSrc, seekTime = 1, useCrossOrigin = false) {
                 return;
             }
             video.currentTime = safeTime;
+            seekFallbackTimer = window.setTimeout(drawFrame, 1500);
         }, { once: true });
         video.addEventListener("seeked", drawFrame, { once: true });
-        video.addEventListener("loadeddata", () => {
-            if (video.currentTime === 0) {
-                drawFrame();
-            }
-        }, { once: true });
+        video.addEventListener("loadeddata", drawFrame, { once: true });
+        video.addEventListener("canplay", drawFrame, { once: true });
 
         video.src = videoSrc;
         video.load();
@@ -235,26 +256,19 @@ function captureThumbnail(videoSrc, seekTime = 1, useCrossOrigin = false) {
 }
 
 async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
-    const isSameOrigin =
-        videoUrl.startsWith("/") || videoUrl.startsWith(window.location.origin);
-
     try {
-        return await captureThumbnail(videoUrl, seekTime, !isSameOrigin);
-    } catch (directErr) {
+        const res = await fetch(videoUrl, { credentials: "include" });
+        if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
+        const blob = await res.blob();
+        const blobUrl = URL.createObjectURL(blob);
         try {
-            const res = await fetch(videoUrl, { credentials: "include" });
-            if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
-            const blob = await res.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            try {
-                return await captureThumbnail(blobUrl, seekTime, false);
-            } finally {
-                URL.revokeObjectURL(blobUrl);
-            }
-        } catch {
-            console.warn("Thumbnail generation failed:", directErr);
-            return null;
+            return await captureThumbnail(blobUrl, seekTime, false);
+        } finally {
+            URL.revokeObjectURL(blobUrl);
         }
+    } catch (err) {
+        console.warn("Thumbnail generation failed:", err);
+        return null;
     }
 }
 
