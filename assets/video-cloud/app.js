@@ -124,7 +124,8 @@ async function loadVideos() {
 
         await runWithConcurrency(cards, 2, async ({ video, img }) => {
             try {
-                const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
+                // const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
+                const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`);
                 img.src = thumbnail || img.src;
             } catch {}
         });
@@ -167,138 +168,169 @@ async function openVideoFromId(id) {
     }
 }
 
-function captureThumbnail(videoSrc, seekTime = 1, useCrossOrigin = false) {
-    return new Promise((resolve, reject) => {
-        const video = document.createElement("video");
-        video.preload = "auto";
-        video.muted = true;
-        video.playsInline = true;
-        video.setAttribute("playsinline", "");
-        video.style.position = "fixed";
-        video.style.left = "-9999px";
-        video.style.top = "-9999px";
-        video.style.width = "1px";
-        video.style.height = "1px";
-        document.body.appendChild(video);
+// function captureThumbnail(videoSrc, seekTime = 1, useCrossOrigin = false) {
+//     return new Promise((resolve, reject) => {
+//         const video = document.createElement("video");
+//         video.preload = "auto";
+//         video.muted = true;
+//         video.playsInline = true;
+//         video.setAttribute("playsinline", "");
+//         video.style.position = "fixed";
+//         video.style.left = "-9999px";
+//         video.style.top = "-9999px";
+//         video.style.width = "1px";
+//         video.style.height = "1px";
+//         document.body.appendChild(video);
 
-        if (useCrossOrigin) {
-            video.crossOrigin = "anonymous";
-        }
+//         if (useCrossOrigin) {
+//             video.crossOrigin = "anonymous";
+//         }
 
-        let settled = false;
-        let targetTime = 0;
-        let shouldSeek = false;
-        const timeout = window.setTimeout(() => {
-            fail(new Error("Thumbnail capture timed out"));
-        }, 12000);
-        let seekFallbackTimer = null;
+//         let settled = false;
+//         let targetTime = 0;
+//         let shouldSeek = false;
+//         const timeout = window.setTimeout(() => {
+//             fail(new Error("Thumbnail capture timed out"));
+//         }, 12000);
+//         let seekFallbackTimer = null;
 
-        const cleanup = () => {
-            window.clearTimeout(timeout);
-            if (seekFallbackTimer) {
-                window.clearTimeout(seekFallbackTimer);
-                seekFallbackTimer = null;
-            }
-            video.pause();
-            video.removeAttribute("src");
-            video.load();
-            video.remove();
-        };
+//         const cleanup = () => {
+//             window.clearTimeout(timeout);
+//             if (seekFallbackTimer) {
+//                 window.clearTimeout(seekFallbackTimer);
+//                 seekFallbackTimer = null;
+//             }
+//             video.pause();
+//             video.removeAttribute("src");
+//             video.load();
+//             video.remove();
+//         };
 
-        const done = (result) => {
-            if (settled) return;
-            settled = true;
-            cleanup();
-            resolve(result);
-        };
+//         const done = (result) => {
+//             if (settled) return;
+//             settled = true;
+//             cleanup();
+//             resolve(result);
+//         };
 
-        const fail = (err) => {
-            if (settled) return;
-            settled = true;
-            cleanup();
-            reject(err instanceof Error ? err : new Error("Thumbnail capture failed"));
-        };
+//         const fail = (err) => {
+//             if (settled) return;
+//             settled = true;
+//             cleanup();
+//             reject(err instanceof Error ? err : new Error("Thumbnail capture failed"));
+//         };
 
-        const drawFrame = () => {
-            if (video.readyState < 2) return;
-            const canvas = document.createElement("canvas");
-            const sourceWidth = video.videoWidth || 320;
-            const sourceHeight = video.videoHeight || 180;
-            const maxWidth = 480;
-            const maxHeight = 270;
-            const scale = Math.min(1, maxWidth / sourceWidth, maxHeight / sourceHeight);
-            canvas.width = Math.max(1, Math.round(sourceWidth * scale));
-            canvas.height = Math.max(1, Math.round(sourceHeight * scale));
-            const ctx = canvas.getContext("2d");
-            if (!ctx) {
-                fail(new Error("Canvas not supported"));
-                return;
-            }
+//         const drawFrame = () => {
+//             if (video.readyState < 2) return;
+//             const canvas = document.createElement("canvas");
+//             const sourceWidth = video.videoWidth || 320;
+//             const sourceHeight = video.videoHeight || 180;
+//             const maxWidth = 480;
+//             const maxHeight = 270;
+//             const scale = Math.min(1, maxWidth / sourceWidth, maxHeight / sourceHeight);
+//             canvas.width = Math.max(1, Math.round(sourceWidth * scale));
+//             canvas.height = Math.max(1, Math.round(sourceHeight * scale));
+//             const ctx = canvas.getContext("2d");
+//             if (!ctx) {
+//                 fail(new Error("Canvas not supported"));
+//                 return;
+//             }
 
-            try {
-                ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-                done(canvas.toDataURL("image/jpeg", 0.78));
-            } catch (err) {
-                fail(err);
-            }
-        };
+//             try {
+//                 ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+//                 done(canvas.toDataURL("image/jpeg", 0.78));
+//             } catch (err) {
+//                 fail(err);
+//             }
+//         };
 
-        video.addEventListener("error", () => fail(new Error("Video load error")), { once: true });
-        video.addEventListener("loadedmetadata", () => {
-            const duration = Number.isFinite(video.duration) ? video.duration : 0;
-            const safeTime = duration > 0 ? Math.min(seekTime, Math.max(0, duration - 0.1)) : 0;
-            targetTime = safeTime;
-            if (safeTime <= 0) {
-                shouldSeek = false;
-                drawFrame();
-                return;
-            }
-            shouldSeek = true;
-            video.currentTime = safeTime;
-            seekFallbackTimer = window.setTimeout(drawFrame, 1500);
-        }, { once: true });
-        video.addEventListener("seeked", drawFrame, { once: true });
-        video.addEventListener("loadeddata", () => {
-            if (!shouldSeek) {
-                drawFrame();
-                return;
-            }
-            if (Math.abs((video.currentTime || 0) - targetTime) <= 0.2) {
-                drawFrame();
-            }
-        }, { once: true });
-        video.addEventListener("canplay", () => {
-            if (!shouldSeek && video.currentTime === 0) {
-                drawFrame();
-            }
-        }, { once: true });
+//         video.addEventListener("error", () => fail(new Error("Video load error")), { once: true });
+//         video.addEventListener("loadedmetadata", () => {
+//             const duration = Number.isFinite(video.duration) ? video.duration : 0;
+//             const safeTime = duration > 0 ? Math.min(seekTime, Math.max(0, duration - 0.1)) : 0;
+//             targetTime = safeTime;
+//             if (safeTime <= 0) {
+//                 shouldSeek = false;
+//                 drawFrame();
+//                 return;
+//             }
+//             shouldSeek = true;
+//             video.currentTime = safeTime;
+//             seekFallbackTimer = window.setTimeout(drawFrame, 1500);
+//         }, { once: true });
+//         video.addEventListener("seeked", drawFrame, { once: true });
+//         video.addEventListener("loadeddata", () => {
+//             if (!shouldSeek) {
+//                 drawFrame();
+//                 return;
+//             }
+//             if (Math.abs((video.currentTime || 0) - targetTime) <= 0.2) {
+//                 drawFrame();
+//             }
+//         }, { once: true });
+//         video.addEventListener("canplay", () => {
+//             if (!shouldSeek && video.currentTime === 0) {
+//                 drawFrame();
+//             }
+//         }, { once: true });
 
-        video.src = videoSrc;
-        video.load();
+//         video.src = videoSrc;
+//         video.load();
+//     });
+// }
+
+// async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
+//     try {
+//         const isSameOrigin =
+//             videoUrl.startsWith("/") || videoUrl.startsWith(window.location.origin);
+//         return await captureThumbnail(videoUrl, seekTime, !isSameOrigin);
+//     } catch (directErr) {
+//         try {
+//             const res = await fetch(videoUrl, { credentials: "include" });
+//             if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
+//             const blob = await res.blob();
+//             const blobUrl = URL.createObjectURL(blob);
+//             try {
+//                 return await captureThumbnail(blobUrl, seekTime, false);
+//             } finally {
+//                 URL.revokeObjectURL(blobUrl);
+//             }
+//         } catch (blobErr) {
+//             console.warn("Thumbnail generation failed:", directErr, blobErr);
+//             return null;
+//         }
+//     }
+// }
+
+async function getThumbnailFromVideo(videoUrl) {
+  return new Promise((resolve, reject) => {
+    const video = document.createElement("video");
+    video.crossOrigin = "anonymous";
+    video.src = videoUrl;
+    video.muted = true;
+    video.playsInline = true;
+
+    video.addEventListener("loadeddata", () => {
+      video.currentTime = Math.min(1, video.duration / 2);
     });
-}
 
-async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
-    try {
-        const isSameOrigin =
-            videoUrl.startsWith("/") || videoUrl.startsWith(window.location.origin);
-        return await captureThumbnail(videoUrl, seekTime, !isSameOrigin);
-    } catch (directErr) {
-        try {
-            const res = await fetch(videoUrl, { credentials: "include" });
-            if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
-            const blob = await res.blob();
-            const blobUrl = URL.createObjectURL(blob);
-            try {
-                return await captureThumbnail(blobUrl, seekTime, false);
-            } finally {
-                URL.revokeObjectURL(blobUrl);
-            }
-        } catch (blobErr) {
-            console.warn("Thumbnail generation failed:", directErr, blobErr);
-            return null;
-        }
-    }
+    video.addEventListener("seeked", () => {
+      const canvas = document.createElement("canvas");
+      canvas.width = 320;
+      canvas.height = 180;
+
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob((blob) => {
+        if (!blob) return reject("Thumbnail failed");
+
+        resolve(blob);
+      }, "image/jpeg", 0.8);
+    });
+
+    video.onerror = reject;
+  });
 }
 
 // async function openVideo(id) {
