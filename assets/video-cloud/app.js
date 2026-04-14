@@ -334,103 +334,115 @@ async function openVideoFromId(id) {
 // }
 
 async function getThumbnailFromVideo(videoUrl) {
-  let sourceUrl = "";
   let sourceObjectUrl = "";
-  let settled = false;
+  const video = document.createElement("video");
+  video.muted = true;
+  video.playsInline = true;
+  video.preload = "auto";
 
-  return new Promise(async (resolve, reject) => {
-    const video = document.createElement("video");
-    video.muted = true;
-    video.playsInline = true;
-    video.preload = "auto";
+  const cleanup = () => {
+    if (sourceObjectUrl) URL.revokeObjectURL(sourceObjectUrl);
+    video.pause();
+    video.removeAttribute("src");
+    video.load();
+    video.remove();
+  };
 
-    const cleanup = () => {
-      if (sourceObjectUrl) URL.revokeObjectURL(sourceObjectUrl);
-      video.pause();
-      video.removeAttribute("src");
-      video.load();
-      video.remove();
-    };
+  const waitForEvent = (eventName, timeoutMs = 2500) =>
+    new Promise((resolve, reject) => {
+      let timeoutId = null;
+      const onEvent = () => {
+        if (timeoutId) window.clearTimeout(timeoutId);
+        resolve();
+      };
+      const onError = () => {
+        if (timeoutId) window.clearTimeout(timeoutId);
+        reject(new Error("Video load error"));
+      };
 
-    const done = (value) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      resolve(value);
-    };
+      video.addEventListener(eventName, onEvent, { once: true });
+      video.addEventListener("error", onError, { once: true });
+      timeoutId = window.setTimeout(() => {
+        reject(new Error(`Timed out waiting for ${eventName}`));
+      }, timeoutMs);
+    });
 
-    const fail = (err) => {
-      if (settled) return;
-      settled = true;
-      cleanup();
-      reject(err instanceof Error ? err : new Error("Thumbnail failed"));
-    };
+  const drawFrame = () => {
+    const canvas = document.createElement("canvas");
+    const sw = video.videoWidth || 320;
+    const sh = video.videoHeight || 180;
+    const scale = Math.min(1, 480 / sw, 270 / sh);
+    canvas.width = Math.max(1, Math.round(sw * scale));
+    canvas.height = Math.max(1, Math.round(sh * scale));
+    const ctx = canvas.getContext("2d", { willReadFrequently: true });
+    if (!ctx) throw new Error("Canvas not supported");
 
-    try {
-      const res = await fetch(videoUrl, { credentials: "include" });
-      if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
-      const blob = await res.blob();
-      sourceObjectUrl = URL.createObjectURL(blob);
-      sourceUrl = sourceObjectUrl;
-    } catch (err) {
-      fail(err);
-      return;
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height).data;
+    const pixelStep = 16;
+    let sampleCount = 0;
+    let luminanceSum = 0;
+    let luminanceMax = 0;
+
+    for (let i = 0; i < imageData.length; i += pixelStep) {
+      const r = imageData[i] || 0;
+      const g = imageData[i + 1] || 0;
+      const b = imageData[i + 2] || 0;
+      const lum = (0.2126 * r) + (0.7152 * g) + (0.0722 * b);
+      luminanceSum += lum;
+      if (lum > luminanceMax) luminanceMax = lum;
+      sampleCount += 1;
     }
 
-    const timeout = window.setTimeout(() => {
-      fail(new Error("Thumbnail capture timed out"));
-    }, 12000);
+    const avgLuminance = sampleCount > 0 ? luminanceSum / sampleCount : 0;
+    const isLikelyBlack = avgLuminance < 12 && luminanceMax < 36;
 
-    const finishWithFrame = () => {
-      if (video.readyState < 2) return;
-      const canvas = document.createElement("canvas");
-      const sw = video.videoWidth || 320;
-      const sh = video.videoHeight || 180;
-      const scale = Math.min(1, 480 / sw, 270 / sh);
-      canvas.width = Math.max(1, Math.round(sw * scale));
-      canvas.height = Math.max(1, Math.round(sh * scale));
-      const ctx = canvas.getContext("2d");
-      if (!ctx) {
-        window.clearTimeout(timeout);
-        fail(new Error("Canvas not supported"));
-        return;
-      }
-      try {
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-        window.clearTimeout(timeout);
-        done(canvas.toDataURL("image/jpeg", 0.8));
-      } catch (err) {
-        window.clearTimeout(timeout);
-        fail(err);
-      }
+    return {
+      dataUrl: canvas.toDataURL("image/jpeg", 0.8),
+      isLikelyBlack
     };
+  };
 
-    let targetTime = 1;
-    video.addEventListener("loadedmetadata", () => {
-      const duration = Number.isFinite(video.duration) ? video.duration : 0;
-      targetTime = duration > 0 ? Math.min(1, Math.max(0, duration - 0.1)) : 0;
-      if (targetTime <= 0) {
-        finishWithFrame();
-        return;
-      }
-      video.currentTime = targetTime;
-      window.setTimeout(finishWithFrame, 1400);
-    }, { once: true });
-
-    video.addEventListener("seeked", finishWithFrame, { once: true });
-    video.addEventListener("loadeddata", () => {
-      if (Math.abs((video.currentTime || 0) - targetTime) <= 0.2) {
-        finishWithFrame();
-      }
-    }, { once: true });
-    video.addEventListener("error", () => {
-      window.clearTimeout(timeout);
-      fail(new Error("Video load error"));
-    }, { once: true });
-
-    video.src = sourceUrl;
+  try {
+    const res = await fetch(videoUrl, { credentials: "include" });
+    if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
+    const blob = await res.blob();
+    sourceObjectUrl = URL.createObjectURL(blob);
+    video.src = sourceObjectUrl;
     video.load();
-  });
+
+    await waitForEvent("loadedmetadata", 5000);
+
+    const duration = Number.isFinite(video.duration) ? video.duration : 0;
+    const clampTime = (t) => Math.min(Math.max(0, t), Math.max(0, duration - 0.1));
+    const candidateTimes = duration > 0
+      ? [0.6, 1.2, duration * 0.2, duration * 0.35, duration * 0.5].map(clampTime)
+      : [0];
+
+    let fallbackDataUrl = null;
+
+    for (const t of candidateTimes) {
+      try {
+        if (t > 0) {
+          video.currentTime = t;
+          await waitForEvent("seeked", 2500);
+        } else {
+          await waitForEvent("loadeddata", 2500);
+        }
+
+        if (video.readyState < 2) continue;
+        const frame = drawFrame();
+        if (!fallbackDataUrl) fallbackDataUrl = frame.dataUrl;
+        if (!frame.isLikelyBlack) return frame.dataUrl;
+      } catch {
+        continue;
+      }
+    }
+
+    return fallbackDataUrl;
+  } finally {
+    cleanup();
+  }
 }
 
 // async function openVideo(id) {
