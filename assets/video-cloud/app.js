@@ -303,33 +303,102 @@ async function openVideoFromId(id) {
 // }
 
 async function getThumbnailFromVideo(videoUrl) {
-  return new Promise((resolve, reject) => {
+  let sourceUrl = "";
+  let sourceObjectUrl = "";
+  let settled = false;
+
+  return new Promise(async (resolve, reject) => {
     const video = document.createElement("video");
-    video.crossOrigin = "anonymous";
-    video.src = videoUrl;
     video.muted = true;
     video.playsInline = true;
+    video.preload = "auto";
 
-    video.addEventListener("loadeddata", () => {
-      video.currentTime = Math.min(1, video.duration / 2);
-    });
+    const cleanup = () => {
+      if (sourceObjectUrl) URL.revokeObjectURL(sourceObjectUrl);
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      video.remove();
+    };
 
-    video.addEventListener("seeked", () => {
+    const done = (value) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      resolve(value);
+    };
+
+    const fail = (err) => {
+      if (settled) return;
+      settled = true;
+      cleanup();
+      reject(err instanceof Error ? err : new Error("Thumbnail failed"));
+    };
+
+    try {
+      const res = await fetch(videoUrl, { credentials: "include" });
+      if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
+      const blob = await res.blob();
+      sourceObjectUrl = URL.createObjectURL(blob);
+      sourceUrl = sourceObjectUrl;
+    } catch (err) {
+      fail(err);
+      return;
+    }
+
+    const timeout = window.setTimeout(() => {
+      fail(new Error("Thumbnail capture timed out"));
+    }, 12000);
+
+    const finishWithFrame = () => {
+      if (video.readyState < 2) return;
       const canvas = document.createElement("canvas");
-      canvas.width = 320;
-      canvas.height = 180;
-
+      const sw = video.videoWidth || 320;
+      const sh = video.videoHeight || 180;
+      const scale = Math.min(1, 480 / sw, 270 / sh);
+      canvas.width = Math.max(1, Math.round(sw * scale));
+      canvas.height = Math.max(1, Math.round(sh * scale));
       const ctx = canvas.getContext("2d");
-      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+      if (!ctx) {
+        window.clearTimeout(timeout);
+        fail(new Error("Canvas not supported"));
+        return;
+      }
+      try {
+        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        window.clearTimeout(timeout);
+        done(canvas.toDataURL("image/jpeg", 0.8));
+      } catch (err) {
+        window.clearTimeout(timeout);
+        fail(err);
+      }
+    };
 
-      canvas.toBlob((blob) => {
-        if (!blob) return reject("Thumbnail failed");
+    let targetTime = 1;
+    video.addEventListener("loadedmetadata", () => {
+      const duration = Number.isFinite(video.duration) ? video.duration : 0;
+      targetTime = duration > 0 ? Math.min(1, Math.max(0, duration - 0.1)) : 0;
+      if (targetTime <= 0) {
+        finishWithFrame();
+        return;
+      }
+      video.currentTime = targetTime;
+      window.setTimeout(finishWithFrame, 1400);
+    }, { once: true });
 
-        resolve(blob);
-      }, "image/jpeg", 0.8);
-    });
+    video.addEventListener("seeked", finishWithFrame, { once: true });
+    video.addEventListener("loadeddata", () => {
+      if (Math.abs((video.currentTime || 0) - targetTime) <= 0.2) {
+        finishWithFrame();
+      }
+    }, { once: true });
+    video.addEventListener("error", () => {
+      window.clearTimeout(timeout);
+      fail(new Error("Video load error"));
+    }, { once: true });
 
-    video.onerror = reject;
+    video.src = sourceUrl;
+    video.load();
   });
 }
 
