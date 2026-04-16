@@ -70,6 +70,70 @@ function renderSessionInfo(session) {
   sessionInfo.textContent = `Signed in as ${username}${remainingText}`;
 }
 
+const THUMB_CACHE_PREFIX = "videoCloud:thumb:v1:";
+const THUMB_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+
+function getThumbnailCacheKey(videoId) {
+  return `${THUMB_CACHE_PREFIX}${videoId}`;
+}
+
+function getCachedThumbnail(videoId) {
+  try {
+    const raw = localStorage.getItem(getThumbnailCacheKey(videoId));
+    if (!raw) return null;
+
+    const parsed = JSON.parse(raw);
+    if (!parsed?.dataUrl || !parsed?.savedAt) return null;
+
+    const age = Date.now() - Number(parsed.savedAt);
+    if (!Number.isFinite(age) || age > THUMB_CACHE_TTL_MS) {
+      localStorage.removeItem(getThumbnailCacheKey(videoId));
+      return null;
+    }
+
+    return parsed.dataUrl;
+  } catch {
+    return null;
+  }
+}
+
+function setCachedThumbnail(videoId, dataUrl) {
+  if (!dataUrl) return;
+  try {
+    const payload = JSON.stringify({
+      dataUrl,
+      savedAt: Date.now()
+    });
+    localStorage.setItem(getThumbnailCacheKey(videoId), payload);
+  } catch {}
+}
+
+function pruneExpiredThumbnailCache() {
+  try {
+    const now = Date.now();
+    for (let i = localStorage.length - 1; i >= 0; i -= 1) {
+      const key = localStorage.key(i);
+      if (!key || !key.startsWith(THUMB_CACHE_PREFIX)) continue;
+
+      const raw = localStorage.getItem(key);
+      if (!raw) {
+        localStorage.removeItem(key);
+        continue;
+      }
+
+      try {
+        const parsed = JSON.parse(raw);
+        const age = now - Number(parsed?.savedAt || 0);
+        if (!parsed?.dataUrl || !Number.isFinite(age) || age > THUMB_CACHE_TTL_MS) {
+          localStorage.removeItem(key);
+        }
+      } catch {
+        localStorage.removeItem(key);
+      }
+    }
+  } catch {}
+}
+
 async function initPanelPage() {
   const session = await VideoCloudAuth.getSession();
   if (!session.authenticated) {
@@ -91,6 +155,7 @@ async function loadVideos() {
     if (!container) return;
 
     container.innerHTML = "Loading videos...";
+    pruneExpiredThumbnailCache();
 
     try {
         const res = await fetch("/video-api/storage/list", { credentials: "include" });
@@ -124,9 +189,17 @@ async function loadVideos() {
 
         await runWithConcurrency(cards, 2, async ({ video, img }) => {
             try {
-                // const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
+                const cachedThumbnail = getCachedThumbnail(video.id);
+                if (cachedThumbnail) {
+                    img.src = cachedThumbnail;
+                    return;
+                }
+
                 const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
-                img.src = thumbnail || img.src;
+                if (thumbnail) {
+                    img.src = thumbnail;
+                    setCachedThumbnail(video.id, thumbnail);
+                }
             } catch {}
         });
 
