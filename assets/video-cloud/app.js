@@ -70,24 +70,38 @@ function renderSessionInfo(session) {
   sessionInfo.textContent = `Signed in as ${username}${remainingText}`;
 }
 
-const THUMB_CACHE_PREFIX = "videoCloud:thumb:v1:";
+const THUMB_CACHE_NAME = "videoCloud-thumb-cache-v1";
+const THUMB_CACHE_PREFIX = "/__video-cloud-thumb-cache__/";
 const THUMB_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
 
 function getThumbnailCacheKey(videoId) {
   return `${THUMB_CACHE_PREFIX}${videoId}`;
 }
 
-function getCachedThumbnail(videoId) {
+async function getThumbnailCache() {
+  if (!("caches" in window)) return null;
   try {
-    const raw = localStorage.getItem(getThumbnailCacheKey(videoId));
-    if (!raw) return null;
+    return await caches.open(THUMB_CACHE_NAME);
+  } catch {
+    return null;
+  }
+}
 
-    const parsed = JSON.parse(raw);
+async function getCachedThumbnail(videoId) {
+  try {
+    const cache = await getThumbnailCache();
+    if (!cache) return null;
+
+    const req = new Request(getThumbnailCacheKey(videoId));
+    const cachedRes = await cache.match(req);
+    if (!cachedRes) return null;
+
+    const parsed = await cachedRes.json();
     if (!parsed?.dataUrl || !parsed?.savedAt) return null;
 
     const age = Date.now() - Number(parsed.savedAt);
     if (!Number.isFinite(age) || age > THUMB_CACHE_TTL_MS) {
-      localStorage.removeItem(getThumbnailCacheKey(videoId));
+      await cache.delete(req);
       return null;
     }
 
@@ -97,38 +111,51 @@ function getCachedThumbnail(videoId) {
   }
 }
 
-function setCachedThumbnail(videoId, dataUrl) {
+async function setCachedThumbnail(videoId, dataUrl) {
   if (!dataUrl) return;
   try {
+    const cache = await getThumbnailCache();
+    if (!cache) return;
+
     const payload = JSON.stringify({
       dataUrl,
       savedAt: Date.now()
     });
-    localStorage.setItem(getThumbnailCacheKey(videoId), payload);
+
+    await cache.put(
+      new Request(getThumbnailCacheKey(videoId)),
+      new Response(payload, {
+        headers: { "content-type": "application/json" }
+      })
+    );
   } catch {}
 }
 
-function pruneExpiredThumbnailCache() {
+async function pruneExpiredThumbnailCache() {
   try {
-    const now = Date.now();
-    for (let i = localStorage.length - 1; i >= 0; i -= 1) {
-      const key = localStorage.key(i);
-      if (!key || !key.startsWith(THUMB_CACHE_PREFIX)) continue;
+    const cache = await getThumbnailCache();
+    if (!cache) return;
 
-      const raw = localStorage.getItem(key);
-      if (!raw) {
-        localStorage.removeItem(key);
-        continue;
-      }
+    const now = Date.now();
+    const requests = await cache.keys();
+    for (const request of requests) {
+      const key = request.url || "";
+      if (!key.includes(THUMB_CACHE_PREFIX)) continue;
 
       try {
-        const parsed = JSON.parse(raw);
+        const cachedRes = await cache.match(request);
+        if (!cachedRes) {
+          await cache.delete(request);
+          continue;
+        }
+
+        const parsed = await cachedRes.json();
         const age = now - Number(parsed?.savedAt || 0);
         if (!parsed?.dataUrl || !Number.isFinite(age) || age > THUMB_CACHE_TTL_MS) {
-          localStorage.removeItem(key);
+          await cache.delete(request);
         }
       } catch {
-        localStorage.removeItem(key);
+        await cache.delete(request);
       }
     }
   } catch {}
@@ -155,7 +182,7 @@ async function loadVideos() {
     if (!container) return;
 
     container.innerHTML = "Loading videos...";
-    pruneExpiredThumbnailCache();
+    await pruneExpiredThumbnailCache();
 
     try {
         const res = await fetch("/video-api/storage/list", { credentials: "include" });
@@ -189,7 +216,7 @@ async function loadVideos() {
 
         await runWithConcurrency(cards, 2, async ({ video, img }) => {
             try {
-                const cachedThumbnail = getCachedThumbnail(video.id);
+                const cachedThumbnail = await getCachedThumbnail(video.id);
                 if (cachedThumbnail) {
                     img.src = cachedThumbnail;
                     return;
@@ -198,7 +225,7 @@ async function loadVideos() {
                 const thumbnail = await getThumbnailFromVideo(`/video-api/storage/video?id=${video.id}`, 1);
                 if (thumbnail) {
                     img.src = thumbnail;
-                    setCachedThumbnail(video.id, thumbnail);
+                    await setCachedThumbnail(video.id, thumbnail);
                 }
             } catch {}
         });
