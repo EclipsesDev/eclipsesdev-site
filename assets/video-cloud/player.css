@@ -184,6 +184,13 @@
   max-height: none;
 }
 
+.video-lightbox:fullscreen .video-player-shell,
+.video-lightbox:-webkit-full-screen .video-player-shell,
+.video-lightbox:-moz-full-screen .video-player-shell {
+  align-items: stretch;
+  justify-content: center;
+}
+
 .video-lightbox:fullscreen #video-player,
 .video-lightbox:-webkit-full-screen #video-player,
 .video-lightbox:-moz-full-screen #video-player,
@@ -194,6 +201,18 @@
   height: 100%;
   object-fit: cover;
   border-radius: 0;
+}
+
+/* Extra explicit selectors to override UA/fullscreen quirks (Chrome/Firefox) */
+.video-lightbox:fullscreen video,
+.video-lightbox:-webkit-full-screen video,
+.video-lightbox:-moz-full-screen video,
+video:fullscreen,
+video:-webkit-full-screen,
+video:-moz-full-screen {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
 }
 
 .video-lightbox:fullscreen #video-close,
