@@ -116,6 +116,8 @@ function isFullscreenActive() {
   return Boolean(
     document.fullscreenElement ||
       document.webkitFullscreenElement ||
+      document.mozFullScreenElement ||
+      document.mozFullScreen ||
       player.webkitDisplayingFullscreen
   );
 }
@@ -131,6 +133,11 @@ function exitFullscreenIfNeeded() {
 
   if (document.webkitExitFullscreen) {
     document.webkitExitFullscreen();
+    return;
+  }
+
+  if (document.mozCancelFullScreen) {
+    document.mozCancelFullScreen();
     return;
   }
 
@@ -199,6 +206,8 @@ fullscreenButton.addEventListener("click", () => {
       lightbox.requestFullscreen();
     } else if (lightbox.webkitRequestFullscreen) {
       lightbox.webkitRequestFullscreen();
+    } else if (lightbox.mozRequestFullScreen) {
+      lightbox.mozRequestFullScreen();
     } else {
       player.webkitEnterFullscreen?.();
     }
@@ -243,6 +252,7 @@ lightbox.addEventListener("click", (event) => {
 
 document.addEventListener("fullscreenchange", scheduleFullscreenIconUpdate);
 document.addEventListener("webkitfullscreenchange", scheduleFullscreenIconUpdate);
+document.addEventListener("mozfullscreenchange", scheduleFullscreenIconUpdate);
 player.addEventListener("webkitbeginfullscreen", scheduleFullscreenIconUpdate);
 player.addEventListener("webkitendfullscreen", scheduleFullscreenIconUpdate);
 
