@@ -170,7 +170,7 @@
   width: 100dvw;
   height: 100dvh;
   background: #000;
-} */
+}
 
 .video-lightbox:fullscreen .video-player-shell,
 .video-lightbox:-webkit-full-screen .video-player-shell,
