@@ -166,8 +166,8 @@
 .video-lightbox:-webkit-full-screen,
 .video-lightbox:-moz-full-screen {
   display: block;
-  width: 100vw;
-  height: 100vh;
+  width: 100%;
+  height: 100%;
   background: #000;
 }
 
