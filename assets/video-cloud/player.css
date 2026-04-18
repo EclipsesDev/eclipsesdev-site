@@ -162,7 +162,7 @@
   height: 24px;
 }
 
-/* .video-lightbox:fullscreen,
+.video-lightbox:fullscreen,
 .video-lightbox:-webkit-full-screen,
 .video-lightbox:-moz-full-screen {
   width: 100vw;
@@ -172,7 +172,7 @@
   background: #000;
 } */
 
-/* .video-lightbox:fullscreen .video-player-shell,
+.video-lightbox:fullscreen .video-player-shell,
 .video-lightbox:-webkit-full-screen .video-player-shell,
 .video-lightbox:-moz-full-screen .video-player-shell {
   width: 100vw;
@@ -181,9 +181,9 @@
   height: 100dvh;
   max-width: none;
   max-height: none;
-} */
+}
 
-/* .video-lightbox:fullscreen #video-player,
+.video-lightbox:fullscreen #video-player,
 .video-lightbox:-webkit-full-screen #video-player,
 .video-lightbox:-moz-full-screen #video-player {
   position: absolute;
@@ -194,9 +194,20 @@
   height: 100dvh;
   object-fit: fill;
   border-radius: 0;
-} */
+}
 
-/* #video-player:fullscreen,
+.video-lightbox:fullscreen .video-player-shell,
+.video-lightbox:-webkit-full-screen .video-player-shell,
+.video-lightbox:-moz-full-screen .video-player-shell {
+  width: 100vw !important;
+  height: 100vh !important;
+  width: 100dvw !important;
+  height: 100dvh !important;
+  max-width: none !important;
+  max-height: none !important;
+}
+
+#video-player:fullscreen,
 #video-player:-webkit-full-screen,
 #video-player:-moz-full-screen {
   position: fixed !important;
@@ -205,13 +216,13 @@
   height: 100vh !important;
   width: 100dvw !important;
   height: 100dvh !important;
-  min-width: 100vw;
-  min-height: 100vh;
   object-fit: fill !important;
   border-radius: 0 !important;
-} */
+}
 
-.video-lightbox.is-fullscreen-active {
+/* Working stuff */
+
+/* .video-lightbox.is-fullscreen-active {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -237,7 +248,7 @@
   height: 100% !important;
   object-fit: fill !important;
   border-radius: 0 !important;
-}
+} */
 
 .video-lightbox:fullscreen #video-close,
 .video-lightbox:-webkit-full-screen #video-close,
