@@ -182,7 +182,11 @@
 }
 
 .video-lightbox:fullscreen #video-player,
-.video-lightbox:-webkit-full-screen #video-player {
+.video-lightbox:-webkit-full-screen #video-player,
+.video-lightbox:-moz-full-screen #video-player {
+  /* #video-player:fullscreen,
+  #video-player:-webkit-full-screen, 
+  #video-player:-moz-full-screen { */
   position: absolute;
   inset: 0;
   width: 100vw;
