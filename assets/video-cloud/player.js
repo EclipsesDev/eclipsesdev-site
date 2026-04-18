@@ -25,6 +25,7 @@ const PLAYER_ICONS = {
 const PLAYER_IDLE_DELAY_MS = 2000;
 let idleTimer = null;
 let fullscreenIconRafId = null;
+let isNativeVideoFullscreenActive = false;
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -113,16 +114,46 @@ function resetIdleTimer() {
 }
 
 function isFullscreenActive() {
-  return !!document.fullscreenElement;
+  return !!document.fullscreenElement || isNativeVideoFullscreenActive;
+}
+
+async function requestPlayerFullscreen() {
+  if (lightbox.requestFullscreen) {
+    try {
+      await lightbox.requestFullscreen({ navigationUI: "hide" });
+    } catch {
+      await lightbox.requestFullscreen();
+    }
+    return;
+  }
+
+  if (lightbox.webkitRequestFullscreen) {
+    lightbox.webkitRequestFullscreen();
+    return;
+  }
+
+  if (player.webkitEnterFullscreen) {
+    player.webkitEnterFullscreen();
+  }
 }
 
 async function exitFullscreenIfNeeded() {
-  if (!document.fullscreenElement) return;
+  if (!document.fullscreenElement && !isNativeVideoFullscreenActive) return;
 
-  try {
-    await document.exitFullscreen();
-  } catch (e) {
-    console.error("Exit fullscreen failed:", e);
+  if (document.fullscreenElement) {
+    try {
+      await document.exitFullscreen();
+    } catch (e) {
+      console.error("Exit fullscreen failed:", e);
+    }
+  }
+
+  if (isNativeVideoFullscreenActive && player.webkitExitFullscreen) {
+    try {
+      player.webkitExitFullscreen();
+    } catch (e) {
+      console.error("Native fullscreen exit failed:", e);
+    }
   }
 }
 
@@ -185,7 +216,7 @@ muteButton.addEventListener("click", () => {
 fullscreenButton.addEventListener("click", async () => {
   if (!isFullscreenActive()) {
     try {
-      await lightbox.requestFullscreen();
+      await requestPlayerFullscreen();
     } catch (e) {
       console.error("Fullscreen failed:", e);
     }
@@ -231,8 +262,15 @@ lightbox.addEventListener("click", (event) => {
 document.addEventListener("fullscreenchange", scheduleFullscreenIconUpdate);
 document.addEventListener("webkitfullscreenchange", scheduleFullscreenIconUpdate);
 document.addEventListener("mozfullscreenchange", scheduleFullscreenIconUpdate);
-player.addEventListener("webkitbeginfullscreen", scheduleFullscreenIconUpdate);
-player.addEventListener("webkitendfullscreen", scheduleFullscreenIconUpdate);
+player.addEventListener("webkitbeginfullscreen", () => {
+  isNativeVideoFullscreenActive = true;
+  scheduleFullscreenIconUpdate();
+});
+
+player.addEventListener("webkitendfullscreen", () => {
+  isNativeVideoFullscreenActive = false;
+  scheduleFullscreenIconUpdate();
+});
 
 updatePlayIcon();
 updateMuteIcon();
