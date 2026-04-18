@@ -113,35 +113,17 @@ function resetIdleTimer() {
 }
 
 function isFullscreenActive() {
-  return Boolean(
-    document.fullscreenElement ||
-      document.webkitFullscreenElement ||
-      document.mozFullScreenElement ||
-      document.mozFullScreen ||
-      player.webkitDisplayingFullscreen
-  );
+  return !!document.fullscreenElement;
 }
 
-function exitFullscreenIfNeeded() {
-  if (!isFullscreenActive()) return;
+async function exitFullscreenIfNeeded() {
+  if (!document.fullscreenElement) return;
 
-  if (document.exitFullscreen) {
-    const maybePromise = document.exitFullscreen();
-    maybePromise?.catch?.(() => {});
-    return;
+  try {
+    await document.exitFullscreen();
+  } catch (e) {
+    console.error("Exit fullscreen failed:", e);
   }
-
-  if (document.webkitExitFullscreen) {
-    document.webkitExitFullscreen();
-    return;
-  }
-
-  if (document.mozCancelFullScreen) {
-    document.mozCancelFullScreen();
-    return;
-  }
-
-  player.webkitExitFullscreen?.();
 }
 
 function openVideoPlayer(url) {
@@ -200,16 +182,12 @@ muteButton.addEventListener("click", () => {
   updateMuteIcon();
 });
 
-fullscreenButton.addEventListener("click", () => {
+fullscreenButton.addEventListener("click", async () => {
   if (!isFullscreenActive()) {
-    if (lightbox.requestFullscreen) {
-      lightbox.requestFullscreen();
-    } else if (lightbox.webkitRequestFullscreen) {
-      lightbox.webkitRequestFullscreen();
-    } else if (lightbox.mozRequestFullScreen) {
-      lightbox.mozRequestFullScreen();
-    } else {
-      player.webkitEnterFullscreen?.();
+    try {
+      await lightbox.requestFullscreen();
+    } catch (e) {
+      console.error("Fullscreen failed:", e);
     }
   } else {
     exitFullscreenIfNeeded();
