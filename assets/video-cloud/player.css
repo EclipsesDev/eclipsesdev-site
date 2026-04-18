@@ -185,13 +185,22 @@
 .video-lightbox:fullscreen #video-player,
 .video-lightbox:-webkit-full-screen #video-player,
 .video-lightbox:-moz-full-screen #video-player {
-  position: absolute;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  object-fit: fill;
-  background: transparent;
-  border-radius: 0;
+  position: absolute !important;
+  inset: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  min-width: 100vw !important;
+  min-height: 100vh !important;
+  max-width: 100vw !important;
+  max-height: 100vh !important;
+  object-fit: fill !important;
+  background: transparent !important;
+  border-radius: 0 !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  display: block !important;
+  box-sizing: border-box !important;
+  z-index: 10010 !important;
 }
 
 .video-lightbox:fullscreen #video-close,
