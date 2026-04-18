@@ -163,7 +163,8 @@
 }
 
 .video-lightbox:fullscreen,
-.video-lightbox:-webkit-full-screen {
+.video-lightbox:-webkit-full-screen,
+.video-lightbox:-moz-full-screen {
   width: 100vw;
   height: 100vh;
   width: 100dvw;
@@ -172,7 +173,8 @@
 }
 
 .video-lightbox:fullscreen .video-player-shell,
-.video-lightbox:-webkit-full-screen .video-player-shell {
+.video-lightbox:-webkit-full-screen .video-player-shell,
+.video-lightbox:-moz-full-screen .video-player-shell {
   width: 100vw;
   height: 100vh;
   width: 100dvw;
@@ -199,25 +201,16 @@
   border-radius: 0;
 }
 
-#video-player:-moz-full-screen {
-  position: fixed;
-  inset: 0;
-  width: 100vw;
-  height: 100vh;
-  width: 100dvw;
-  height: 100dvh;
-  object-fit: fill !important;
-  border-radius: 0;
-}
-
 .video-lightbox:fullscreen #video-close,
-.video-lightbox:-webkit-full-screen #video-close {
+.video-lightbox:-webkit-full-screen #video-close,
+.video-lightbox:-moz-full-screen #video-close {
   top: max(12px, env(safe-area-inset-top));
   right: max(12px, env(safe-area-inset-right));
 }
 
 .video-lightbox:fullscreen #video-controls,
-.video-lightbox:-webkit-full-screen #video-controls {
+.video-lightbox:-webkit-full-screen #video-controls,
+.video-lightbox:-moz-full-screen #video-controls {
   left: max(12px, env(safe-area-inset-left));
   right: max(12px, env(safe-area-inset-right));
   bottom: max(24px, env(safe-area-inset-bottom));
@@ -225,7 +218,8 @@
 }
 
 .video-lightbox:fullscreen #video-progress,
-.video-lightbox:-webkit-full-screen #video-progress {
+.video-lightbox:-webkit-full-screen #video-progress,
+.video-lightbox:-moz-full-screen #video-progress {
   height: 4px;
 }
 
