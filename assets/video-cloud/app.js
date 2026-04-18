@@ -214,7 +214,11 @@ async function loadVideos() {
             return { video, img };
         });
 
-        await runWithConcurrency(cards, 2, async ({ video, img }) => {
+        const ua = navigator.userAgent || "";
+        const isFirefoxAndroid = /Android/i.test(ua) && /Firefox/i.test(ua);
+        const thumbnailConcurrency = isFirefoxAndroid ? 1 : 2;
+
+        await runWithConcurrency(cards, thumbnailConcurrency, async ({ video, img }) => {
             try {
                 const cachedThumbnail = await getCachedThumbnail(video.id);
                 if (cachedThumbnail) {
@@ -305,17 +309,20 @@ async function openVideoFromId(id) {
 //     });
 // }
 
-async function getThumbnailFromVideo(videoUrl) {
-  const res = await fetch(videoUrl, { credentials: "include" });
-  if (!res.ok) throw new Error(`Thumbnail fetch failed (${res.status})`);
-
-  const blob = await res.blob();
-  const objectUrl = URL.createObjectURL(blob);
-
+async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
   const video = document.createElement("video");
   video.preload = "auto";
   video.muted = true;
   video.playsInline = true;
+  video.setAttribute("muted", "");
+  video.setAttribute("playsinline", "");
+  video.crossOrigin = "anonymous";
+  video.style.position = "fixed";
+  video.style.left = "-99999px";
+  video.style.top = "0";
+  video.style.width = "1px";
+  video.style.height = "1px";
+  video.style.opacity = "0";
 
   const wait = (event, ms = 2500) =>
     new Promise((resolve, reject) => {
@@ -332,6 +339,7 @@ async function getThumbnailFromVideo(videoUrl) {
     c.width = Math.max(1, Math.round(w * s));
     c.height = Math.max(1, Math.round(h * s));
     const ctx = c.getContext("2d", { willReadFrequently: true });
+    if (!ctx) return { url: null, black: true };
     ctx.drawImage(video, 0, 0, c.width, c.height);
 
     const d = ctx.getImageData(0, 0, c.width, c.height).data;
@@ -347,25 +355,27 @@ async function getThumbnailFromVideo(videoUrl) {
   };
 
   try {
-    video.src = objectUrl;
+    document.body.appendChild(video);
+    video.src = videoUrl;
     video.load();
-    await wait("loadedmetadata", 5000);
+    await wait("loadedmetadata", 12000);
 
     const dur = Number.isFinite(video.duration) ? video.duration : 0;
     const clamp = (t) => Math.min(Math.max(0, t), Math.max(0, dur - 0.1));
-    const times = dur > 0 ? [1, dur * 0.2, dur * 0.35, dur * 0.5, dur * 0.7].map(clamp) : [0];
+    const times = dur > 0 ? [seekTime, dur * 0.2, dur * 0.35, dur * 0.5, dur * 0.7].map(clamp) : [0];
 
     let fallback = null;
     for (const t of times) {
       try {
         if (t > 0) {
           video.currentTime = t;
-          await wait("seeked", 2500);
+          await wait("seeked", 6000);
         } else {
-          await wait("loadeddata", 2500);
+          await wait("loadeddata", 6000);
         }
         if (video.readyState < 2) continue;
         const f = frame();
+        if (!f.url) continue;
         fallback ||= f.url;
         if (!f.black) return f.url;
       } catch {}
@@ -373,10 +383,10 @@ async function getThumbnailFromVideo(videoUrl) {
 
     return fallback;
   } finally {
-    URL.revokeObjectURL(objectUrl);
     video.pause();
     video.removeAttribute("src");
     video.load();
+    video.remove();
   }
 }
 
