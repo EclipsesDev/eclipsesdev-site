@@ -214,11 +214,7 @@ async function loadVideos() {
             return { video, img };
         });
 
-        const ua = navigator.userAgent || "";
-        const isFirefoxAndroid = /Android/i.test(ua) && /Firefox/i.test(ua);
-        const thumbnailConcurrency = isFirefoxAndroid ? 1 : 2;
-
-        await runWithConcurrency(cards, thumbnailConcurrency, async ({ video, img }) => {
+        await runWithConcurrency(cards, 2, async ({ video, img }) => {
             try {
                 const cachedThumbnail = await getCachedThumbnail(video.id);
                 if (cachedThumbnail) {
@@ -309,7 +305,7 @@ async function openVideoFromId(id) {
 //     });
 // }
 
-async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
+async function getThumbnailFromVideo(videoUrl) {
   const video = document.createElement("video");
   video.preload = "auto";
   video.muted = true;
@@ -358,20 +354,20 @@ async function getThumbnailFromVideo(videoUrl, seekTime = 1) {
     document.body.appendChild(video);
     video.src = videoUrl;
     video.load();
-    await wait("loadedmetadata", 12000);
+    await wait("loadedmetadata", 5000);
 
     const dur = Number.isFinite(video.duration) ? video.duration : 0;
     const clamp = (t) => Math.min(Math.max(0, t), Math.max(0, dur - 0.1));
-    const times = dur > 0 ? [seekTime, dur * 0.2, dur * 0.35, dur * 0.5, dur * 0.7].map(clamp) : [0];
+    const times = dur > 0 ? [1, dur * 0.2, dur * 0.35, dur * 0.5, dur * 0.7].map(clamp) : [0];
 
     let fallback = null;
     for (const t of times) {
       try {
         if (t > 0) {
           video.currentTime = t;
-          await wait("seeked", 6000);
+          await wait("seeked", 2500);
         } else {
-          await wait("loadeddata", 6000);
+          await wait("loadeddata", 2500);
         }
         if (video.readyState < 2) continue;
         const f = frame();
