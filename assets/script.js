@@ -1,5 +1,41 @@
 let changelogLoaded = false;
 
+function normalizePath(pathname) {
+  if (!pathname) return "/";
+  const trimmed = pathname.replace(/\/+$/, "");
+  return trimmed === "" ? "/" : trimmed;
+}
+
+function syncActiveNavButton(id) {
+  const nav = document.querySelector(".nav-bar");
+  if (!nav) return;
+
+  nav.querySelectorAll("button.active").forEach((button) => {
+    button.classList.remove("active");
+  });
+
+  let targetButton = nav.querySelector(`[data-section="${id}"]`);
+
+  if (!targetButton) {
+    const currentPath = normalizePath(window.location.pathname);
+    nav.querySelectorAll("a[href]").forEach((link) => {
+      if (targetButton) return;
+      const linkPath = normalizePath(new URL(link.href, window.location.origin).pathname);
+      if (linkPath === currentPath) {
+        const nestedButton = link.querySelector("button");
+        if (nestedButton) targetButton = nestedButton;
+      }
+    });
+  }
+
+  if (!targetButton && id === "home") {
+    targetButton = nav.querySelector('[data-section="home"]')
+      || nav.querySelector('a[href="/"] button');
+  }
+
+  targetButton?.classList.add("active");
+}
+
 function activateSection(id) {
   const sections = document.querySelectorAll(".section");
 
@@ -7,8 +43,7 @@ function activateSection(id) {
     sec.hidden = sec.id !== id;
   });
 
-  document.querySelector(".nav-bar .active")?.classList.remove("active");
-  document.querySelector(`[data-section="${id}"]`)?.classList.add("active");
+  syncActiveNavButton(id);
 
   if (id === "changelog" && !changelogLoaded) {
     loadChangelog();
@@ -68,7 +103,7 @@ async function loadChangelog() {
   }
 }
 
-document.querySelectorAll(".nav-bar button").forEach(button => {
+document.querySelectorAll(".nav-bar button[data-section]").forEach(button => {
   button.addEventListener("click", () => {
     const target = button.dataset.section;
     activateSection(target);
