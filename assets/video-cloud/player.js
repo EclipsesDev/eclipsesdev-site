@@ -120,6 +120,7 @@ function isFullscreenActive() {
 async function requestPlayerFullscreen() {
   if (lightbox.requestFullscreen) {
     try {
+      print("using lightbox req");
       await lightbox.requestFullscreen({ navigationUI: "hide" });
     } catch {
       await lightbox.requestFullscreen();
@@ -128,11 +129,18 @@ async function requestPlayerFullscreen() {
   }
 
   if (lightbox.webkitRequestFullscreen) {
+      print("using lightbox web req");
     lightbox.webkitRequestFullscreen();
     return;
   }
 
+  if (player.requestFullscreen) {
+      print("using player");
+    player.requestFullscreen();
+  }
+
   if (player.webkitEnterFullscreen) {
+      print("using web enter");
     player.webkitEnterFullscreen();
   }
 }
