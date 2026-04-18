@@ -119,8 +119,16 @@ function isFullscreenActive() {
 
 async function requestPlayerFullscreen() {
   if (lightbox.requestFullscreen) {
-    await lightbox.requestFullscreen();
-    return;
+    try {
+      await lightbox.requestFullscreen();
+      return;
+    } catch (lightboxError) {
+      if (player.requestFullscreen) {
+        await player.requestFullscreen();
+        return;
+      }
+      throw lightboxError;
+    }
   }
 
   if (lightbox.webkitRequestFullscreen) {
