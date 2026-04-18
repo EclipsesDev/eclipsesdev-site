@@ -162,7 +162,7 @@
   height: 24px;
 }
 
-.video-lightbox:fullscreen,
+/* .video-lightbox:fullscreen,
 .video-lightbox:-webkit-full-screen,
 .video-lightbox:-moz-full-screen {
   width: 100vw;
@@ -196,17 +196,6 @@
   border-radius: 0;
 }
 
-.video-lightbox:fullscreen .video-player-shell,
-.video-lightbox:-webkit-full-screen .video-player-shell,
-.video-lightbox:-moz-full-screen .video-player-shell {
-  width: 100vw !important;
-  height: 100vh !important;
-  width: 100dvw !important;
-  height: 100dvh !important;
-  max-width: none !important;
-  max-height: none !important;
-}
-
 #video-player:fullscreen,
 #video-player:-webkit-full-screen,
 #video-player:-moz-full-screen {
@@ -218,11 +207,11 @@
   height: 100dvh !important;
   object-fit: fill !important;
   border-radius: 0 !important;
-}
+} */
 
 /* Working stuff */
 
-/* .video-lightbox.is-fullscreen-active {
+.video-lightbox.is-fullscreen-active {
   position: fixed;
   inset: 0;
   width: 100vw;
@@ -248,7 +237,7 @@
   height: 100% !important;
   object-fit: fill !important;
   border-radius: 0 !important;
-} */
+}
 
 .video-lightbox:fullscreen #video-close,
 .video-lightbox:-webkit-full-screen #video-close,

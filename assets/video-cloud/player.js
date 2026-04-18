@@ -79,16 +79,16 @@ function updateFullscreenIcon() {
   }
 }
 
-// function applyFullscreenLayoutState() {
-//   lightbox.classList.toggle("is-fullscreen-active", isFullscreenActive());
-// }
+function applyFullscreenLayoutState() {
+  lightbox.classList.toggle("is-fullscreen-active", isFullscreenActive());
+}
 
 function scheduleFullscreenIconUpdate() {
   if (fullscreenIconRafId !== null) return;
   fullscreenIconRafId = window.requestAnimationFrame(() => {
     fullscreenIconRafId = null;
     updateFullscreenIcon();
-    // applyFullscreenLayoutState();
+    applyFullscreenLayoutState();
   });
 }
 
@@ -174,7 +174,7 @@ async function exitFullscreenIfNeeded() {
 function openVideoPlayer(url) {
   player.src = url;
   lightbox.style.display = "flex";
-  // applyFullscreenLayoutState();
+  applyFullscreenLayoutState();
   player.pause();
   setIdleState(false);
   clearIdleTimer();
@@ -261,7 +261,7 @@ function closeVideoPlayer() {
   }
   player.src = "";
   lightbox.style.display = "none";
-  // applyFullscreenLayoutState();
+  applyFullscreenLayoutState();
   progressBar.style.width = "0%";
   timeLabel.textContent = "0:00 / 0:00";
   setIdleState(false);
@@ -291,5 +291,5 @@ player.addEventListener("webkitendfullscreen", () => {
 updatePlayIcon();
 updateMuteIcon();
 updateFullscreenIcon();
-// applyFullscreenLayoutState();
+applyFullscreenLayoutState();
 preloadPlayerIcons();
