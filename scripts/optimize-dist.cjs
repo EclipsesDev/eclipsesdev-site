@@ -202,7 +202,7 @@ function runJsObfuscation(jsFiles) {
         deadCodeInjection: true,
         deadCodeInjectionThreshold: 1,
         selfDefending: true,
-        debugProtection: false,
+        debugProtection: true,
 
         target: "browser",
       }).getObfuscatedCode();
