@@ -194,8 +194,8 @@ function runJsObfuscation(jsFiles) {
       transformObjectKeys: true,
       unicodeEscapeSequence: true,
       target: "browser",
-      debugProtection: true,
-      debugProtectionInterval: true,
+      debugProtection: false,
+      debugProtectionInterval: false,
     }).getObfuscatedCode();
     fs.writeFileSync(filePath, obfuscated, "utf8");
   }
