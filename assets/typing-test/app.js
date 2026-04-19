@@ -1,4 +1,10 @@
-document.addEventListener("DOMContentLoaded", () => {
+const EVENTS = {
+  NAV: "popstate",
+  LOAD: "DOMContentLoaded"
+};
+const API = ["https://api.", "eclipsesdev", ".top/sentence/"].join("");
+
+document.addEventListener(EVENTS.LOAD, () => {
     const textDisplay = document.getElementById("text-display");
     const inputField = document.getElementById("input-field");
     const timeElement = document.getElementById("time");
@@ -38,7 +44,7 @@ document.addEventListener("DOMContentLoaded", () => {
             let text = "";
 
             while (text.length < targetLength) {
-                const response = await fetch("https://api.eclipsesdev.top/sentence/");
+                const response = await fetch(API);
                 const data = await response.json();
 
                 text += (text ? " " : "") + data.sentence;

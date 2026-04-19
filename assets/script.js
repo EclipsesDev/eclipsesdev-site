@@ -1,3 +1,8 @@
+const EVENTS = {
+  NAV: "popstate",
+  LOAD: "DOMContentLoaded"
+};
+const API = ["https://api.", "eclipsesdev", ".top/changelog/"].join("");
 let changelogLoaded = false;
 
 function normalizePath(pathname) {
@@ -53,7 +58,7 @@ function activateSection(id) {
 
 async function loadChangelog() {
   try {
-    const res = await fetch("https://api.eclipsesdev.top/changelog/");
+    const res = await fetch(API);
 
     if (!res.ok) {
       throw new Error("Failed to fetch changelog");
@@ -110,12 +115,12 @@ document.querySelectorAll(".nav-bar button[data-section]").forEach(button => {
   });
 });
 
-window.addEventListener("popstate", () => {
+window.addEventListener(EVENTS.NAV, () => {
   const section = window.location.pathname.split("/")[1] || "home";
   activateSection(section);
 });
 
-document.addEventListener("DOMContentLoaded", () => {
+document.addEventListener(EVENTS.LOAD, () => {
   const section = window.location.pathname.split("/")[1] || "home";
   activateSection(section);
 });

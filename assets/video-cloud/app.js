@@ -1,3 +1,8 @@
+const EVENTS = {
+  NAV: "popstate",
+  LOAD: "DOMContentLoaded"
+};
+
 function showError(message) {
   const errorText = document.getElementById("login-error");
   if (!errorText) return;
@@ -701,7 +706,7 @@ async function getThumbnailFromVideo(videoUrl) {
 //     }
 // }
 
-document.addEventListener("DOMContentLoaded", async () => { 
+document.addEventListener(EVENTS.LOAD, async () => { 
   const isLoginPage = window.location.pathname.endsWith("/login/") || window.location.pathname.endsWith("/login"); 
 
   if (isLoginPage) { 
