@@ -197,13 +197,12 @@ function runJsObfuscation(jsFiles) {
         unicodeEscapeSequence: true,
 
         controlFlowFlattening: true,
-        controlFlowFlatteningThreshold: 0.3,
+        controlFlowFlatteningThreshold: 1,
 
         deadCodeInjection: true,
         deadCodeInjectionThreshold: 1,
         selfDefending: true,
-        debugProtection: true,
-        debugProtectionInterval: true,
+        debugProtection: false,
 
         target: "browser",
       }).getObfuscatedCode();
