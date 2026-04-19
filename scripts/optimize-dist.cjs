@@ -176,10 +176,17 @@ function runJsObfuscation(jsFiles) {
       stringArrayRotate: true,
       stringArrayShuffle: true,
       stringArrayThreshold: 0.75,
+      stringArrayEncoding: ['base64'],
       identifierNamesGenerator: "hexadecimal",
       target: "browser",
       transformObjectKeys: true,
       unicodeEscapeSequence: false,
+      renameGlobals: true,
+      numbersToExpressions: true,
+      deadCodeInjection: true,
+      deadCodeInjectionThreshold: 5,
+      splitStrings: true, 
+      selfDefending: true,
     }).getObfuscatedCode();
     fs.writeFileSync(filePath, obfuscated, "utf8");
   }
