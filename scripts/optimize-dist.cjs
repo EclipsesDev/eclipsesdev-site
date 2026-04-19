@@ -197,7 +197,7 @@ function runJsObfuscation(jsFiles) {
         unicodeEscapeSequence: true,
 
         controlFlowFlattening: true,
-        controlFlowFlatteningThreshold: 1,
+        controlFlowFlatteningThreshold: 0.3,
 
         deadCodeInjection: true,
         deadCodeInjectionThreshold: 1,
