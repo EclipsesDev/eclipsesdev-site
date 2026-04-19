@@ -25,7 +25,7 @@ jobs:
   # Single deploy job since we're just deploying
   deploy:
     env:
-      OBFUSCATE_SELECTORS: "false"
+      OBFUSCATE_SELECTORS: "true"
       OBFUSCATE_JS: "true"
     environment:
       name: github-pages
