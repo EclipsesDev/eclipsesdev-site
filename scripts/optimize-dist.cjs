@@ -190,7 +190,7 @@ function runJsObfuscation(jsFiles) {
         splitStringsChunkLength: 5,
 
         identifierNamesGenerator: "mangled-shuffled",
-        renameGlobals: false,
+        renameGlobals: true,
 
         numbersToExpressions: true,
         transformObjectKeys: true,
@@ -199,9 +199,10 @@ function runJsObfuscation(jsFiles) {
         controlFlowFlattening: true,
         controlFlowFlatteningThreshold: 0.3,
 
-        deadCodeInjection: false,
-        selfDefending: false,
-        debugProtection: false,
+        deadCodeInjection: true,
+        deadCodeInjectionThreshold: 1,
+        selfDefending: true,
+        debugProtection: true,
 
         target: "browser",
       }).getObfuscatedCode();
