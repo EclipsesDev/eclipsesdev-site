@@ -184,10 +184,10 @@ function runJsObfuscation(jsFiles) {
 
         stringArrayWrappersCount: 2,
         stringArrayWrappersType: 'function',
-        stringArrayWrappersChainedCalls: false,
+        stringArrayWrappersChainedCalls: true,
 
         splitStrings: true,
-        splitStringsChunkLength: 5,
+        splitStringsChunkLength: 1, // 5
 
         identifierNamesGenerator: "hexadecimal",
         renameGlobals: true,
