@@ -184,9 +184,10 @@ function runJsObfuscation(jsFiles) {
       renameGlobals: true,
       numbersToExpressions: true,
       deadCodeInjection: true,
-      deadCodeInjectionThreshold: 5,
+      deadCodeInjectionThreshold: 50,
       splitStrings: true, 
       selfDefending: true,
+      stringArrayIndexShift: true,
     }).getObfuscatedCode();
     fs.writeFileSync(filePath, obfuscated, "utf8");
   }
