@@ -179,8 +179,8 @@ function runJsObfuscation(jsFiles) {
         stringArray: true,
         stringArrayRotate: true,
         stringArrayShuffle: true,
-        stringArrayThreshold: 0.75,
-        stringArrayEncoding: ['base64'],
+        stringArrayThreshold: 1, // 0.75
+        stringArrayEncoding: ['rc4'],
 
         stringArrayWrappersCount: 2,
         stringArrayWrappersType: 'function',
@@ -200,7 +200,7 @@ function runJsObfuscation(jsFiles) {
         controlFlowFlatteningThreshold: 0.3,
 
         deadCodeInjection: true,
-        deadCodeInjectionThreshold: 1,
+        deadCodeInjectionThreshold: 10, // 1
         selfDefending: true,
         debugProtection: true,
 
