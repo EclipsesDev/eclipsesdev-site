@@ -46,7 +46,7 @@ jobs:
           rsync -a --delete --exclude ".git" --exclude ".github" --exclude "node_modules" --exclude "dist" ./ dist/
       - name: Install optimization tools
         run: |
-          npm install --no-save @minify-html/node@0.18.1 clean-css@5.3.3 javascript-obfuscator@5.4.1 rename-css-selectors@4.1.0 rcs-core@3.7.1 fast-glob@3.3.3
+          npm install --no-save @minify-html/node@0.18.1 clean-css@5.3.3 javascript-obfuscator@5.4.1 fast-glob@3.3.3
       - name: Optimize dist assets
         run: |
           node scripts/optimize-dist.cjs dist
