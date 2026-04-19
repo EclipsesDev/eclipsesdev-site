@@ -169,34 +169,49 @@ function runCssMinification(cssFiles) {
 function runJsObfuscation(jsFiles) {
   for (const filePath of jsFiles) {
     const input = fs.readFileSync(filePath, "utf8");
-    const obfuscated = JavaScriptObfuscator.obfuscate(input, {
-      compact: true,
-      simplify: true,
-      stringArray: true,
-      stringArrayRotate: true,
-      stringArrayShuffle: true,
-      stringArrayIndexShift: true,
-      stringArrayThreshold: 1,
-      stringArrayEncoding: ['base64'],
-      stringArrayWrappersCount: 5,
-      stringArrayWrappersType: 'function',
-      stringArrayWrappersChainedCalls: true,
-      splitStrings: true,
-      splitStringsChunkLength: 3,
-      identifierNamesGenerator: "mangled-shuffled",
-      renameGlobals: false,
-      numbersToExpressions: true,
-      deadCodeInjection: false,
-      deadCodeInjectionThreshold: 1,
-      selfDefending: false,
-      controlFlowFlattening: true,
-      controlFlowFlatteningThreshold: 1,
-      transformObjectKeys: true,
-      unicodeEscapeSequence: true,
-      target: "browser",
-      debugProtection: false,
-      debugProtectionInterval: false,
-    }).getObfuscatedCode();
+
+    let obfuscated;
+    try {
+      obfuscated = JavaScriptObfuscator.obfuscate(input, {
+        compact: true,
+        simplify: true,
+
+        stringArray: true,
+        stringArrayRotate: true,
+        stringArrayShuffle: true,
+        stringArrayThreshold: 0.75,
+        stringArrayEncoding: ['base64'],
+
+        stringArrayWrappersCount: 2,
+        stringArrayWrappersType: 'function',
+        stringArrayWrappersChainedCalls: false,
+
+        splitStrings: true,
+        splitStringsChunkLength: 5,
+
+        identifierNamesGenerator: "mangled-shuffled",
+        renameGlobals: false,
+
+        numbersToExpressions: true,
+        transformObjectKeys: true,
+        unicodeEscapeSequence: false,
+
+        controlFlowFlattening: true,
+        controlFlowFlatteningThreshold: 0.3,
+
+        deadCodeInjection: false,
+        selfDefending: false,
+        debugProtection: false,
+
+        target: "browser",
+      }).getObfuscatedCode();
+
+    } catch (e) {
+      console.error("Obfuscation failed for:", filePath);
+      console.error(e);
+      continue;
+    }
+
     fs.writeFileSync(filePath, obfuscated, "utf8");
   }
 }
