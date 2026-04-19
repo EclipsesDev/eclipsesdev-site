@@ -194,7 +194,7 @@ function runJsObfuscation(jsFiles) {
 
         numbersToExpressions: true,
         transformObjectKeys: true,
-        unicodeEscapeSequence: false,
+        unicodeEscapeSequence: true,
 
         controlFlowFlattening: true,
         controlFlowFlatteningThreshold: 0.3,
@@ -203,6 +203,7 @@ function runJsObfuscation(jsFiles) {
         deadCodeInjectionThreshold: 1,
         selfDefending: true,
         debugProtection: true,
+        debugProtectionInterval: true,
 
         target: "browser",
       }).getObfuscatedCode();
