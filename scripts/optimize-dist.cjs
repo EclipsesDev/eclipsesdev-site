@@ -180,7 +180,7 @@ function runJsObfuscation(jsFiles) {
         stringArrayRotate: true,
         stringArrayShuffle: true,
         stringArrayThreshold: 1, // 0.75
-        stringArrayEncoding: ['rc4'],
+        stringArrayEncoding: ['rc4'], // base64
 
         stringArrayWrappersCount: 2,
         stringArrayWrappersType: 'function',
@@ -189,7 +189,7 @@ function runJsObfuscation(jsFiles) {
         splitStrings: true,
         splitStringsChunkLength: 5,
 
-        identifierNamesGenerator: "mangled-shuffled",
+        identifierNamesGenerator: "hexadecimal",
         renameGlobals: true,
 
         numbersToExpressions: true,
@@ -197,10 +197,10 @@ function runJsObfuscation(jsFiles) {
         unicodeEscapeSequence: true,
 
         controlFlowFlattening: true,
-        controlFlowFlatteningThreshold: 0.3,
+        controlFlowFlatteningThreshold: 0.5,
 
         deadCodeInjection: true,
-        deadCodeInjectionThreshold: 10, // 1
+        deadCodeInjectionThreshold: 1,
         selfDefending: true,
         debugProtection: true,
 
