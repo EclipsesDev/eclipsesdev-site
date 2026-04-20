@@ -190,7 +190,7 @@ function runJsObfuscation(jsFiles) {
         splitStringsChunkLength: 1, // 5
 
         identifierNamesGenerator: "hexadecimal",
-        renameGlobals: true,
+        renameGlobals: false,
 
         numbersToExpressions: true,
         transformObjectKeys: true,
