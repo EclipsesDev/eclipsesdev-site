@@ -31,7 +31,7 @@ function shortName(index) {
 
   // Generate supa long cryptic name lol
   // EXPERIMENTAL
-  const randomHex = Array.from({length: 50}, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  const randomHex = Array.from({length: 200}, () => Math.floor(Math.random() * 16).toString(16)).join("");
   return `_0x${randomHex}_${index}`;
 }
 
