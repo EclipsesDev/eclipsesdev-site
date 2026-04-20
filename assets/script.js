@@ -75,6 +75,7 @@ async function loadChangelog() {
     logs.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     logs.forEach(log => {
+      console.log("Changelog log entry:", log);
       const section = document.createElement("div");
       section.className = "log-section";
 
