@@ -1,3 +1,8 @@
+const EVENTS = {
+  NAV: "popstate",
+  LOAD: "DOMContentLoaded"
+};
+
 async function hasVideoCloudSession() {
   try {
     const response = await fetch("/video-auth/session", {
@@ -28,4 +33,10 @@ async function openProject(project) {
   window.location.href = `/projects/${project}/`;
 }
 
-window.openProject = openProject;
+document.addEventListener(EVENTS.LOAD, function() {
+  document.querySelectorAll('.project-card[data-project]').forEach(card => {
+    card.addEventListener('click', function() {
+      openProject(this.getAttribute('data-project'));
+    });
+  });
+});
