@@ -19,15 +19,21 @@ function escapeRegExp(value) {
   return value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 }
 
+
 function shortName(index) {
-  const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
-  let n = index;
-  let out = "";
-  do {
-    out = alphabet[n % alphabet.length] + out;
-    n = Math.floor(n / alphabet.length) - 1;
-  } while (n >= 0);
-  return `c${out}`;
+  // const alphabet = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ";
+  // let n = index;
+  // let out = "";
+  // do {
+  //   out = alphabet[n % alphabet.length] + out;
+  //   n = Math.floor(n / alphabet.length) - 1;
+  // } while (n >= 0);
+  // return `c${out}`;
+
+  // Generate supa long cryptic name lol
+  // EXPERIMENTAL
+  const randomHex = Array.from({length: 50}, () => Math.floor(Math.random() * 16).toString(16)).join("");
+  return `_0x${randomHex}_${index}`;
 }
 
 function buildClassMap(cssFiles, htmlFiles) {
@@ -191,7 +197,6 @@ function runJsObfuscation(jsFiles) {
 
         identifierNamesGenerator: "hexadecimal",
         renameGlobals: true,
-        // htmlClassRegex: hmm interesting
         // renameProperties: true,
         // renamePropertiesMode: "safe",
 
