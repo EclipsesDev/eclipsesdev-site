@@ -27,3 +27,5 @@ async function openProject(project) {
 
   window.location.href = `/projects/${project}/`;
 }
+
+window.openProject = openProject;
