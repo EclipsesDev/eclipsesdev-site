@@ -71,32 +71,36 @@ async function loadChangelog() {
 
     const fragment = document.createDocumentFragment();
 
-    // Sort logs by date (newest first) test debug
-    logs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    if (Array.isArray(logs)) {
+      // Sort logs by date (newest first)
+      logs.sort((a, b) => new Date(b.date) - new Date(a.date));
 
-    logs.forEach(log => {
-      const section = document.createElement("div");
-      section.className = "log-section";
+      logs.forEach(log => {
+        const section = document.createElement("div");
+        section.className = "log-section";
 
-      const title = document.createElement("div");
-      title.className = "log-title";
-      title.textContent = `Dev Log ${log.date}`;
+        const title = document.createElement("div");
+        title.className = "log-title";
+        title.textContent = `Dev Log ${log.date}`;
 
-      const project = document.createElement("div");
-      project.className = "log-project";
-      project.textContent = log.project;
+        const project = document.createElement("div");
+        project.className = "log-project";
+        project.textContent = log.project;
 
-      const list = document.createElement("ul");
+        const list = document.createElement("ul");
 
-      log.changes.forEach(change => {
-        const li = document.createElement("li");
-        li.textContent = change;
-        list.appendChild(li);
+        if (Array.isArray(log.changes)) {
+          log.changes.forEach(change => {
+            const li = document.createElement("li");
+            li.textContent = change;
+            list.appendChild(li);
+          });
+        }
+
+        section.append(title, project, list);
+        fragment.appendChild(section);
       });
-
-      section.append(title, project, list);
-      fragment.appendChild(section);
-    });
+    }
 
     container.appendChild(fragment);
 

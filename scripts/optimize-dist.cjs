@@ -192,7 +192,7 @@ function runJsObfuscation(jsFiles) {
         identifierNamesGenerator: "hexadecimal",
         renameGlobals: true,
         renameProperties: true,
-        renamePropertiesMode: "safe",
+        renamePropertiesMode: "unsafe",
 
         numbersToExpressions: true,
         transformObjectKeys: true,
