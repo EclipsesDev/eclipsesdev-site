@@ -101,3 +101,5 @@ const VideoCloudAuth = (() => {
     requireAuth
   };
 })();
+
+window.VideoCloudAuth = VideoCloudAuth;
