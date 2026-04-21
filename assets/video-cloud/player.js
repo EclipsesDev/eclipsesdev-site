@@ -181,6 +181,8 @@ function openVideoPlayer(url) {
   updatePlayIcon();
 }
 
+window.openVideoPlayer = openVideoPlayer;
+
 function togglePlayback() {
   if (player.paused) {
     const maybePromise = player.play();
