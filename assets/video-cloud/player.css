@@ -101,8 +101,9 @@
 }
 
 #video-seek-feedback-icon {
-  width: 16px;
-  height: 16px;
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
 }
 
 @keyframes video-seek-feedback-pop {
@@ -358,8 +359,8 @@
   }
 
   #video-seek-feedback-icon {
-    width: 14px;
-    height: 14px;
-    /* flex-basis: 14px; */
+    width: 20x;
+    height: 20px;
+    flex-basis: 20px;
   }
 }
