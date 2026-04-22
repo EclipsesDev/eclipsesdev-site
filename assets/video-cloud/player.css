@@ -77,9 +77,7 @@
   gap: 10px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: rgba(0, 0, 0, 0.55);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #fff;
+  background: transparent;
   font-weight: 600;
   letter-spacing: 0.2px;
   transform: translate(-50%, -50%) scale(0.9);
@@ -103,7 +101,7 @@
 #video-seek-feedback-icon {
   width: 22px;
   height: 22px;
-  flex: 0 0 22px;
+  /* flex: 0 0 22px; */
 }
 
 @keyframes video-seek-feedback-pop {
@@ -361,6 +359,6 @@
   #video-seek-feedback-icon {
     width: 20x;
     height: 20px;
-    flex-basis: 20px;
+    /* flex-basis: 20px; */
   }
 }
