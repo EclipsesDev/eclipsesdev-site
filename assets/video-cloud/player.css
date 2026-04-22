@@ -100,14 +100,9 @@
   left: 36%;
 }
 
-#video-seek-feedback-label {
-  font-size: 14px;
-  line-height: 1;
-}
-
 .video-icon--seek-feedback {
-  width: 26px;
-  height: 26px;
+  width: 16px;
+  height: 16px;
   filter: brightness(0) invert(1);
 }
 
@@ -363,12 +358,8 @@
     left: 32%;
   }
 
-  #video-seek-feedback-label {
-    font-size: 13px;
-  }
-
   .video-icon--seek-feedback {
-    width: 22px;
-    height: 22px;
+    width: 14px;
+    height: 14px;
   }
 }

@@ -5,7 +5,6 @@ const playerShell = document.querySelector(".video-player-shell");
 const playIcon = document.getElementById("video-play-icon");
 const seekFeedback = document.getElementById("video-seek-feedback");
 const seekFeedbackIcon = document.getElementById("video-seek-feedback-icon");
-const seekFeedbackLabel = document.getElementById("video-seek-feedback-label");
 const closeButton = document.getElementById("video-close");
 const progressBar = document.getElementById("video-progress-bar");
 const progressContainer = document.getElementById("video-progress");
@@ -218,10 +217,9 @@ function seekBy(seconds) {
 }
 
 function showSeekFeedback(direction) {
-  if (!seekFeedback || !seekFeedbackIcon || !seekFeedbackLabel) return;
+  if (!seekFeedback || !seekFeedbackIcon) return;
   const isForward = direction === "forward";
   setIcon(seekFeedbackIcon, isForward ? PLAYER_ICONS.forward : PLAYER_ICONS.rewind, isForward ? "Forward 5 seconds" : "Rewind 5 seconds");
-  seekFeedbackLabel.textContent = isForward ? `+${DOUBLE_CLICK_SEEK_SECONDS}s` : `-${DOUBLE_CLICK_SEEK_SECONDS}s`;
   seekFeedback.classList.remove("seek-forward", "seek-backward", "is-visible");
   seekFeedback.classList.add(isForward ? "seek-forward" : "seek-backward");
   void seekFeedback.offsetWidth;
