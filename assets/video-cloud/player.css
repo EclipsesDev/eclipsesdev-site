@@ -28,6 +28,9 @@
   z-index: 10003;
   pointer-events: all;
   touch-action: manipulation;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #video-overlay {
@@ -77,13 +80,16 @@
   gap: 10px;
   padding: 10px 14px;
   border-radius: 999px;
-  background: transparent;
+  background: black;
   font-weight: 600;
   letter-spacing: 0.2px;
   transform: translate(-50%, -50%) scale(0.9);
   opacity: 0;
   pointer-events: none;
   z-index: 10006;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
 }
 
 #video-seek-feedback.is-visible {
@@ -101,7 +107,10 @@
 #video-seek-feedback-icon {
   width: 22px;
   height: 22px;
-  /* flex: 0 0 22px; */
+  flex: 0 0 22px;
+  -webkit-user-drag: none;
+  user-select: none;
+  -webkit-tap-highlight-color: transparent;
 }
 
 @keyframes video-seek-feedback-pop {

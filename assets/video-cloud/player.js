@@ -254,6 +254,8 @@ function seekFromSurfaceSide(surface, clientX) {
 }
 
 function handleSurfaceClick(event) {
+  event.preventDefault();
+
   if (surfaceClickTimer) {
     clearTimeout(surfaceClickTimer);
     surfaceClickTimer = null;
