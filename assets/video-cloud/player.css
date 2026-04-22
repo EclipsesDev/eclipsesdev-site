@@ -100,11 +100,10 @@
   left: 36%;
 }
 
-/* #video-seek-feedback-icon {
+#video-seek-feedback-icon {
   width: 16px;
   height: 16px;
-  flex: 0 0 16px;
-} */
+}
 
 @keyframes video-seek-feedback-pop {
   0% {
