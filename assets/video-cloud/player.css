@@ -100,6 +100,12 @@
   left: 36%;
 }
 
+/* #video-seek-feedback-icon {
+  width: 16px;
+  height: 16px;
+  flex: 0 0 16px;
+} */
+
 @keyframes video-seek-feedback-pop {
   0% {
     opacity: 0;
@@ -352,8 +358,9 @@
     left: 32%;
   }
 
-  .video-icon--seek-feedback {
+  #video-seek-feedback-icon {
     width: 14px;
     height: 14px;
+    /* flex-basis: 14px; */
   }
 }
