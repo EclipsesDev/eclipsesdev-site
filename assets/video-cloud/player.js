@@ -35,6 +35,7 @@ let isNativeVideoFullscreenActive = false;
 let surfaceClickTimer = null;
 let isProgressDragging = false;
 let seekFeedbackTimer = null;
+let activeProgressPointerId = null;
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -243,6 +244,11 @@ function seekFromProgressClientX(clientX) {
   updatePlaybackProgress();
 }
 
+function setProgressDraggingState(isDragging) {
+  isProgressDragging = isDragging;
+  progressContainer.classList.toggle("is-dragging", isDragging);
+}
+
 function seekFromSurfaceSide(surface, clientX) {
   const rect = surface.getBoundingClientRect();
   const midpoint = rect.left + rect.width / 2;
@@ -274,33 +280,78 @@ for (const surface of [overlay, player]) {
 }
 
 if (window.PointerEvent) {
-  progressContainer.addEventListener("pointerdown", (event) => {
-    if (event.button !== 0) return;
-    isProgressDragging = true;
+  const onProgressPointerDown = (event) => {
+    if (event.pointerType === "mouse" && event.button !== 0) return;
+    event.preventDefault();
+    activeProgressPointerId = event.pointerId;
+    setProgressDraggingState(true);
     progressContainer.setPointerCapture?.(event.pointerId);
     seekFromProgressClientX(event.clientX);
     resetIdleTimer();
-  });
+  };
 
-  progressContainer.addEventListener("pointermove", (event) => {
+  const onProgressPointerMove = (event) => {
     if (!isProgressDragging) return;
+    if (activeProgressPointerId !== null && event.pointerId !== activeProgressPointerId) return;
+    event.preventDefault();
     seekFromProgressClientX(event.clientX);
-  });
+  };
 
   const stopProgressDrag = (event) => {
     if (!isProgressDragging) return;
-    isProgressDragging = false;
-    progressContainer.releasePointerCapture?.(event.pointerId);
+    if (activeProgressPointerId !== null && event.pointerId !== activeProgressPointerId) return;
+    setProgressDraggingState(false);
+    progressContainer.releasePointerCapture?.(activeProgressPointerId);
+    activeProgressPointerId = null;
   };
 
+  progressContainer.addEventListener("pointerdown", onProgressPointerDown);
+  progressContainer.addEventListener("pointermove", onProgressPointerMove);
+  document.addEventListener("pointermove", onProgressPointerMove);
   progressContainer.addEventListener("pointerup", stopProgressDrag);
+  document.addEventListener("pointerup", stopProgressDrag);
   progressContainer.addEventListener("pointercancel", stopProgressDrag);
+  document.addEventListener("pointercancel", stopProgressDrag);
   progressContainer.addEventListener("lostpointercapture", () => {
-    isProgressDragging = false;
+    setProgressDraggingState(false);
+    activeProgressPointerId = null;
   });
 } else {
-  progressContainer.addEventListener("click", (event) => {
+  let isTouchScrubbing = false;
+
+  progressContainer.addEventListener("touchstart", (event) => {
+    isTouchScrubbing = true;
+    setProgressDraggingState(true);
+    seekFromProgressClientX(event.touches[0].clientX);
+  }, { passive: true });
+
+  progressContainer.addEventListener("touchmove", (event) => {
+    if (!isTouchScrubbing) return;
+    seekFromProgressClientX(event.touches[0].clientX);
+  }, { passive: true });
+
+  const stopTouchScrub = () => {
+    isTouchScrubbing = false;
+    setProgressDraggingState(false);
+  };
+
+  progressContainer.addEventListener("touchend", stopTouchScrub);
+  progressContainer.addEventListener("touchcancel", stopTouchScrub);
+
+  progressContainer.addEventListener("mousedown", (event) => {
+    if (event.button !== 0) return;
+    setProgressDraggingState(true);
     seekFromProgressClientX(event.clientX);
+  });
+
+  document.addEventListener("mousemove", (event) => {
+    if (!isProgressDragging) return;
+    seekFromProgressClientX(event.clientX);
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (!isProgressDragging) return;
+    setProgressDraggingState(false);
   });
 }
 
@@ -361,7 +412,8 @@ function closeVideoPlayer() {
     seekFeedbackTimer = null;
   }
   seekFeedback?.classList.remove("is-visible");
-  isProgressDragging = false;
+  setProgressDraggingState(false);
+  activeProgressPointerId = null;
   exitFullscreenIfNeeded();
   player.pause();
   if (player.src.startsWith("blob:")) {
