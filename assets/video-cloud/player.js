@@ -3,6 +3,9 @@ const player = document.getElementById("video-player");
 const overlay = document.getElementById("video-overlay");
 const playerShell = document.querySelector(".video-player-shell");
 const playIcon = document.getElementById("video-play-icon");
+const seekFeedback = document.getElementById("video-seek-feedback");
+const seekFeedbackIcon = document.getElementById("video-seek-feedback-icon");
+const seekFeedbackLabel = document.getElementById("video-seek-feedback-label");
 const closeButton = document.getElementById("video-close");
 const progressBar = document.getElementById("video-progress-bar");
 const progressContainer = document.getElementById("video-progress");
@@ -16,6 +19,8 @@ const fullscreenIcon = document.getElementById("video-fullscreen-icon");
 const PLAYER_ICONS = {
   play: "/assets/img/Play.png",
   pause: "/assets/img/Pause.png",
+  forward: "/assets/img/forward.png",
+  rewind: "/assets/img/rewind.png",
   muted: "/assets/img/Mute.png",
   unmuted: "/assets/svg/unmute.svg",
   maximize: "/assets/svg/maximize.svg",
@@ -30,6 +35,7 @@ let fullscreenIconRafId = null;
 let isNativeVideoFullscreenActive = false;
 let surfaceClickTimer = null;
 let isProgressDragging = false;
+let seekFeedbackTimer = null;
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -211,6 +217,24 @@ function seekBy(seconds) {
   updatePlaybackProgress();
 }
 
+function showSeekFeedback(direction) {
+  if (!seekFeedback || !seekFeedbackIcon || !seekFeedbackLabel) return;
+  const isForward = direction === "forward";
+  setIcon(seekFeedbackIcon, isForward ? PLAYER_ICONS.forward : PLAYER_ICONS.rewind, isForward ? "Forward 5 seconds" : "Rewind 5 seconds");
+  seekFeedbackLabel.textContent = isForward ? `+${DOUBLE_CLICK_SEEK_SECONDS}s` : `-${DOUBLE_CLICK_SEEK_SECONDS}s`;
+  seekFeedback.classList.remove("seek-forward", "seek-backward", "is-visible");
+  seekFeedback.classList.add(isForward ? "seek-forward" : "seek-backward");
+  void seekFeedback.offsetWidth;
+  seekFeedback.classList.add("is-visible");
+
+  if (seekFeedbackTimer) {
+    clearTimeout(seekFeedbackTimer);
+  }
+  seekFeedbackTimer = setTimeout(() => {
+    seekFeedback.classList.remove("is-visible");
+  }, 420);
+}
+
 function seekFromProgressClientX(clientX) {
   const duration = player.duration;
   if (!Number.isFinite(duration) || duration <= 0) return;
@@ -224,8 +248,10 @@ function seekFromProgressClientX(clientX) {
 function seekFromSurfaceSide(surface, clientX) {
   const rect = surface.getBoundingClientRect();
   const midpoint = rect.left + rect.width / 2;
-  const seekAmount = clientX < midpoint ? -DOUBLE_CLICK_SEEK_SECONDS : DOUBLE_CLICK_SEEK_SECONDS;
+  const isForward = clientX >= midpoint;
+  const seekAmount = isForward ? DOUBLE_CLICK_SEEK_SECONDS : -DOUBLE_CLICK_SEEK_SECONDS;
   seekBy(seekAmount);
+  showSeekFeedback(isForward ? "forward" : "backward");
   resetIdleTimer();
 }
 
@@ -330,6 +356,11 @@ function closeVideoPlayer() {
     clearTimeout(surfaceClickTimer);
     surfaceClickTimer = null;
   }
+  if (seekFeedbackTimer) {
+    clearTimeout(seekFeedbackTimer);
+    seekFeedbackTimer = null;
+  }
+  seekFeedback?.classList.remove("is-visible");
   isProgressDragging = false;
   exitFullscreenIfNeeded();
   player.pause();
