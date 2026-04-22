@@ -103,7 +103,7 @@
 .video-icon--seek-feedback {
   width: 16px;
   height: 16px;
-  filter: brightness(0) invert(1);
+  /* filter: brightness(0) invert(1); */
 }
 
 @keyframes video-seek-feedback-pop {
