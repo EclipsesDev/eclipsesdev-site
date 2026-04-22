@@ -332,7 +332,7 @@
   inset: 0;
   width: 100% !important;
   height: 100% !important;
-  object-fit: cover !important;
+  object-fit: fill !important;
   border-radius: 0 !important;
 }
 
@@ -411,5 +411,14 @@
   #video-progress {
     --progress-thumb-size: 14px;
     height: 22px;
+  }
+
+  .video-lightbox.is-fullscreen-active #video-player {
+    position: absolute;
+    inset: 0;
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+    border-radius: 0 !important;
   }
 }
