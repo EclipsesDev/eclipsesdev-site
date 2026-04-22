@@ -105,8 +105,8 @@
 }
 
 #video-seek-feedback-icon {
-  width: 22px;
-  height: 22px;
+  width: 26px;
+  height: 26px;
   -webkit-user-drag: none;
   user-select: none;
   -webkit-tap-highlight-color: transparent;
