@@ -23,9 +23,13 @@ const PLAYER_ICONS = {
 };
 
 const PLAYER_IDLE_DELAY_MS = 2000;
+const SURFACE_DOUBLE_CLICK_DELAY_MS = 250;
+const DOUBLE_CLICK_SEEK_SECONDS = 5;
 let idleTimer = null;
 let fullscreenIconRafId = null;
 let isNativeVideoFullscreenActive = false;
+let surfaceClickTimer = null;
+let isProgressDragging = false;
 
 function formatTime(seconds) {
   if (!Number.isFinite(seconds) || seconds < 0) return "0:00";
@@ -192,10 +196,86 @@ function togglePlayback() {
   }
 }
 
+function updatePlaybackProgress() {
+  const duration = player.duration;
+  const percent = duration > 0 ? (player.currentTime / duration) * 100 : 0;
+  progressBar.style.width = `${percent}%`;
+  timeLabel.textContent = `${formatTime(player.currentTime)} / ${formatTime(duration)}`;
+}
+
+function seekBy(seconds) {
+  const duration = player.duration;
+  if (!Number.isFinite(duration) || duration <= 0) return;
+  const nextTime = Math.min(Math.max(player.currentTime + seconds, 0), duration);
+  player.currentTime = nextTime;
+  updatePlaybackProgress();
+}
+
+function seekFromProgressClientX(clientX) {
+  const duration = player.duration;
+  if (!Number.isFinite(duration) || duration <= 0) return;
+  const rect = progressContainer.getBoundingClientRect();
+  if (rect.width <= 0) return;
+  const clampedRatio = Math.min(Math.max((clientX - rect.left) / rect.width, 0), 1);
+  player.currentTime = clampedRatio * duration;
+  updatePlaybackProgress();
+}
+
+function seekFromSurfaceSide(surface, clientX) {
+  const rect = surface.getBoundingClientRect();
+  const midpoint = rect.left + rect.width / 2;
+  const seekAmount = clientX < midpoint ? -DOUBLE_CLICK_SEEK_SECONDS : DOUBLE_CLICK_SEEK_SECONDS;
+  seekBy(seekAmount);
+  resetIdleTimer();
+}
+
+function handleSurfaceClick(event) {
+  if (surfaceClickTimer) {
+    clearTimeout(surfaceClickTimer);
+    surfaceClickTimer = null;
+    seekFromSurfaceSide(event.currentTarget, event.clientX);
+    return;
+  }
+
+  surfaceClickTimer = setTimeout(() => {
+    surfaceClickTimer = null;
+    togglePlayback();
+  }, SURFACE_DOUBLE_CLICK_DELAY_MS);
+}
+
+for (const surface of [overlay, player]) {
+  surface.addEventListener("click", handleSurfaceClick);
+}
+
 if (window.PointerEvent) {
-  overlay.addEventListener("pointerup", togglePlayback);
+  progressContainer.addEventListener("pointerdown", (event) => {
+    if (event.button !== 0) return;
+    isProgressDragging = true;
+    progressContainer.setPointerCapture?.(event.pointerId);
+    seekFromProgressClientX(event.clientX);
+    resetIdleTimer();
+  });
+
+  progressContainer.addEventListener("pointermove", (event) => {
+    if (!isProgressDragging) return;
+    seekFromProgressClientX(event.clientX);
+  });
+
+  const stopProgressDrag = (event) => {
+    if (!isProgressDragging) return;
+    isProgressDragging = false;
+    progressContainer.releasePointerCapture?.(event.pointerId);
+  };
+
+  progressContainer.addEventListener("pointerup", stopProgressDrag);
+  progressContainer.addEventListener("pointercancel", stopProgressDrag);
+  progressContainer.addEventListener("lostpointercapture", () => {
+    isProgressDragging = false;
+  });
 } else {
-  overlay.addEventListener("click", togglePlayback);
+  progressContainer.addEventListener("click", (event) => {
+    seekFromProgressClientX(event.clientX);
+  });
 }
 
 player.addEventListener("play", () => {
@@ -212,17 +292,7 @@ player.addEventListener("pause", () => {
 });
 
 player.addEventListener("timeupdate", () => {
-  const duration = player.duration;
-  const percent = duration > 0 ? (player.currentTime / duration) * 100 : 0;
-  progressBar.style.width = `${percent}%`;
-  timeLabel.textContent = `${formatTime(player.currentTime)} / ${formatTime(duration)}`;
-});
-
-progressContainer.addEventListener("click", (event) => {
-  const duration = player.duration;
-  if (!Number.isFinite(duration) || duration <= 0) return;
-  const rect = progressContainer.getBoundingClientRect();
-  player.currentTime = ((event.clientX - rect.left) / rect.width) * duration;
+  updatePlaybackProgress();
 });
 
 muteButton.addEventListener("click", () => {
@@ -256,6 +326,11 @@ bindActivityEvents(overlay);
 bindActivityEvents(controls);
 
 function closeVideoPlayer() {
+  if (surfaceClickTimer) {
+    clearTimeout(surfaceClickTimer);
+    surfaceClickTimer = null;
+  }
+  isProgressDragging = false;
   exitFullscreenIfNeeded();
   player.pause();
   if (player.src.startsWith("blob:")) {
