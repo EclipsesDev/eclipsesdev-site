@@ -78,6 +78,10 @@ function renderSessionInfo(session) {
 const THUMB_CACHE_NAME = "videoCloud-thumb-cache-v1";
 const THUMB_CACHE_PREFIX = "/__video-cloud-thumb-cache__/";
 const THUMB_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const VIDEO_CACHE_NAME = "videoCloud-video-cache-v1";
+const VIDEO_CACHE_PREFIX = "/__video-cloud-video-cache__/";
+const VIDEO_CACHE_TTL_MS = 24 * 60 * 60 * 1000;
+const inFlightVideoCacheTasks = new Map();
 
 function getThumbnailCacheKey(videoId) {
   return `${THUMB_CACHE_PREFIX}${videoId}`;
@@ -90,6 +94,113 @@ async function getThumbnailCache() {
   } catch {
     return null;
   }
+}
+
+function getVideoCacheKey(videoId) {
+  return `${VIDEO_CACHE_PREFIX}${videoId}`;
+}
+
+async function getVideoCache() {
+  if (!("caches" in window)) return null;
+  try {
+    return await caches.open(VIDEO_CACHE_NAME);
+  } catch {
+    return null;
+  }
+}
+
+async function hasFreshCachedVideo(videoId) {
+  try {
+    const cache = await getVideoCache();
+    if (!cache) return false;
+
+    const req = new Request(getVideoCacheKey(videoId));
+    const cachedRes = await cache.match(req);
+    if (!cachedRes) return false;
+
+    const savedAt = Number(cachedRes.headers.get("x-video-cache-saved-at") || 0);
+    const age = Date.now() - savedAt;
+    if (!Number.isFinite(age) || age > VIDEO_CACHE_TTL_MS) {
+      await cache.delete(req);
+      return false;
+    }
+
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function getCachedVideoObjectUrl(videoId) {
+  try {
+    const cache = await getVideoCache();
+    if (!cache) return null;
+
+    const req = new Request(getVideoCacheKey(videoId));
+    const cachedRes = await cache.match(req);
+    if (!cachedRes) return null;
+
+    const savedAt = Number(cachedRes.headers.get("x-video-cache-saved-at") || 0);
+    const age = Date.now() - savedAt;
+    if (!Number.isFinite(age) || age > VIDEO_CACHE_TTL_MS) {
+      await cache.delete(req);
+      return null;
+    }
+
+    const blob = await cachedRes.blob();
+    if (!blob || blob.size <= 0) {
+      await cache.delete(req);
+      return null;
+    }
+
+    return URL.createObjectURL(blob);
+  } catch {
+    return null;
+  }
+}
+
+async function setCachedVideo(videoId, sourceResponse) {
+  try {
+    const cache = await getVideoCache();
+    if (!cache) return;
+
+    const blob = await sourceResponse.blob();
+    if (!blob || blob.size <= 0) return;
+
+    const contentType = sourceResponse.headers.get("content-type") || "video/mp4";
+    const cachedResponse = new Response(blob, {
+      headers: {
+        "content-type": contentType,
+        "content-length": String(blob.size),
+        "x-video-cache-saved-at": String(Date.now())
+      }
+    });
+
+    await cache.put(new Request(getVideoCacheKey(videoId)), cachedResponse);
+  } catch {}
+}
+
+async function ensureVideoCached(videoId, videoUrl) {
+  const taskKey = String(videoId);
+  const existingTask = inFlightVideoCacheTasks.get(taskKey);
+  if (existingTask) return existingTask;
+
+  const task = (async () => {
+    const alreadyCached = await hasFreshCachedVideo(videoId);
+    if (alreadyCached) return;
+
+    const res = await fetch(videoUrl, { credentials: "include" });
+    if (!res.ok) return;
+
+    await setCachedVideo(videoId, res);
+  })()
+    .catch(() => {})
+    .finally(() => {
+      inFlightVideoCacheTasks.delete(taskKey);
+    });
+
+  inFlightVideoCacheTasks.set(taskKey, task);
+  return task;
 }
 
 async function getCachedThumbnail(videoId) {
@@ -166,6 +277,36 @@ async function pruneExpiredThumbnailCache() {
   } catch {}
 }
 
+async function pruneExpiredVideoCache() {
+  try {
+    const cache = await getVideoCache();
+    if (!cache) return;
+
+    const now = Date.now();
+    const requests = await cache.keys();
+    for (const request of requests) {
+      const key = request.url || "";
+      if (!key.includes(VIDEO_CACHE_PREFIX)) continue;
+
+      try {
+        const cachedRes = await cache.match(request);
+        if (!cachedRes) {
+          await cache.delete(request);
+          continue;
+        }
+
+        const savedAt = Number(cachedRes.headers.get("x-video-cache-saved-at") || 0);
+        const age = now - savedAt;
+        if (!Number.isFinite(age) || age > VIDEO_CACHE_TTL_MS) {
+          await cache.delete(request);
+        }
+      } catch {
+        await cache.delete(request);
+      }
+    }
+  } catch {}
+}
+
 async function initPanelPage() {
   const session = await VideoCloudAuth.getSession();
   if (!session.authenticated) {
@@ -188,6 +329,7 @@ async function loadVideos() {
 
     container.innerHTML = "Loading videos...";
     await pruneExpiredThumbnailCache();
+    await pruneExpiredVideoCache();
 
     try {
         const res = await fetch("/video-api/storage/list", { credentials: "include" });
@@ -256,7 +398,24 @@ async function runWithConcurrency(items, concurrency, worker) {
 async function openVideoFromId(id) {
     try {
         const url = `/video-api/storage/video?id=${id}`;
-        openVideoPlayer(url);
+        const cachedThumbnail = await getCachedThumbnail(id);
+        const cachedVideoObjectUrl = await getCachedVideoObjectUrl(id);
+
+        if (cachedVideoObjectUrl) {
+            openVideoPlayer(cachedVideoObjectUrl, { poster: cachedThumbnail || "" });
+        } else {
+            openVideoPlayer(url, { poster: cachedThumbnail || "" });
+            void ensureVideoCached(id, url);
+        }
+
+        if (!cachedThumbnail) {
+            void getThumbnailFromVideo(url)
+              .then((thumbnail) => {
+                if (!thumbnail) return;
+                return setCachedThumbnail(id, thumbnail);
+              })
+              .catch(() => {});
+        }
     } catch (err) {
         console.error("Video load error:", err);
 

@@ -181,7 +181,9 @@ async function exitFullscreenIfNeeded() {
   }
 }
 
-function openVideoPlayer(url) {
+function openVideoPlayer(url, options = {}) {
+  const poster = typeof options.poster === "string" ? options.poster : "";
+  player.poster = poster;
   player.src = url;
   lightbox.style.display = "flex";
   applyFullscreenLayoutState();
@@ -419,6 +421,7 @@ function closeVideoPlayer() {
   if (player.src.startsWith("blob:")) {
     URL.revokeObjectURL(player.src);
   }
+  player.removeAttribute("poster");
   player.src = "";
   lightbox.style.display = "none";
   applyFullscreenLayoutState();
