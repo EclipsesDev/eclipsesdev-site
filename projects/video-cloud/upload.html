@@ -20,55 +20,21 @@
   <form id="upload-form">
     <h1 class="upload-title">Upload Video</h1>
 
+    <select id="upload-mode" name="upload-mode" aria-label="Upload mode">
+      <option value="file">Upload File</option>
+      <option value="url">Upload via URL</option>
+    </select>
+
     <input type="text" id="video-title" name="title" placeholder="Video Title" required>
     <input type="text" id="video-description" name="description" placeholder="Description">
-    <input type="file" id="video-file" accept="video/mp4" required>
+    <input type="file" id="video-file" accept="video/*" required>
+    <input type="url" id="video-url" name="video-url" placeholder="https://cdn.discordapp.com/..." style="display:none;">
 
     <button type="submit">Upload Video</button>
 
     <progress id="progress-bar" max="100" value="0" style="display:none;"></progress>
   </form>
 
-  <script>
-    const form = document.getElementById("upload-form");
-    const progressBar = document.getElementById("progress-bar");
-    const inputs = form.querySelectorAll("input[type='text'], input[type='file']");
-
-    form.addEventListener("submit", async (e) => {
-      e.preventDefault();
-
-      const file = document.getElementById("video-file").files[0];
-      if (!file) return alert("Select a video!");
-
-      const title = document.getElementById("video-title").value.trim() || file.name;
-      const description = document.getElementById("video-description").value.trim() || "";
-
-      const formData = new FormData();
-      formData.append("file", file);
-      formData.append("title", title);
-      formData.append("description", description);
-
-      progressBar.style.display = "block";
-
-      const xhr = new XMLHttpRequest();
-      xhr.open("POST", "/video-api/upload-video", true);
-      xhr.upload.onprogress = (e) => {
-        if (e.lengthComputable) {
-          progressBar.value = Math.round((e.loaded / e.total) * 100);
-        }
-      };
-      xhr.onload = () => {
-        progressBar.value = 100;
-        alert(xhr.responseText);
-        progressBar.style.display = "none";
-        inputs.forEach(input => input.value = "");
-      };
-      xhr.onerror = () => {
-        alert("Upload failed!");
-        progressBar.style.display = "none";
-      };
-      xhr.send(formData);
-    });
-  </script>
+  <script src="/assets/video-cloud/upload.js"></script>
 </body>
 </html>
