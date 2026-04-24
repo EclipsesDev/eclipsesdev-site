@@ -19,12 +19,6 @@ document.addEventListener(EVENTS.LOAD, () => {
 
     let currentDifficulty = "easy";
 
-    const difficultyLength = {
-        easy: 80,
-        medium: 150,
-        hard: 250
-    };
-
     const difficultyButtons = document.querySelectorAll(".difficulty-btn");
 
     difficultyButtons.forEach(btn => {
@@ -37,34 +31,25 @@ document.addEventListener(EVENTS.LOAD, () => {
     });
 
     async function loadText() {
-        textDisplay.innerHTML = "Loading text...";
+    textDisplay.innerHTML = "Loading text...";
 
-        try {
-            const targetLength = difficultyLength[currentDifficulty];
-            let text = "";
+    try {
+        const response = await fetch(`${API}${currentDifficulty}`);
+        const data = await response.json();
 
-            while (text.length < targetLength) {
-                const response = await fetch(API);
-                const data = await response.json();
+        const text = data.text;
 
-                text += (text ? " " : "") + data.sentence;
-            }
-            text = text.trim();
-            if (!/[.!?]$/.test(text)) {
-                text += ".";
-            }
+        textDisplay.innerHTML = "";
 
-            textDisplay.innerHTML = "";
+        text.split("").forEach(char => {
+            const span = document.createElement("span");
+            span.innerText = char;
+            textDisplay.appendChild(span);
+        });
 
-            text.split("").forEach(char => {
-                const span = document.createElement("span");
-                span.innerText = char;
-                textDisplay.appendChild(span);
-            });
-
-            if (textDisplay.children.length > 0) {
-                textDisplay.children[0].classList.add("current");
-            }
+        if (textDisplay.children.length > 0) {
+            textDisplay.children[0].classList.add("current");
+        }
 
         } catch (err) {
             textDisplay.innerHTML = "Failed to load text.";
