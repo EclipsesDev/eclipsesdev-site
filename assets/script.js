@@ -4,6 +4,7 @@ const EVENTS = {
 };
 const API = ["https://api.", "eclipsesdev", ".top/changelog/"].join("");
 const CACHE_KEY = "eclipsesdev_changelog_cache_v1";
+let changelogLoaded = false;
 
 function normalizePath(pathname) {
   if (!pathname) return "/";
