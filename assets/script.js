@@ -160,7 +160,7 @@ async function loadChangelog() {
     saveCache({ logs, etag: newEtag, lastModified: newLastModified });
     renderLogs(logs);
   } catch (err) {
-    console.error("Changelog load error:", err);
+    console.error("Changelog load error.:", err);
     if (!cache || !cache.logs) {
       const container = document.getElementById("changelog-logs");
       if (container) container.innerHTML = "<p>Failed to load changelog.</p>";
