@@ -3,7 +3,7 @@ const EVENTS = {
   LOAD: "DOMContentLoaded"
 };
 const API = ["https://api.", "eclipsesdev", ".top/changelog/"].join("");
-let changelogLoaded = false;
+const CACHE_KEY = "eclipsesdev_changelog_cache_v1";
 
 function normalizePath(pathname) {
   if (!pathname) return "/";
@@ -57,21 +57,33 @@ function activateSection(id) {
 }
 
 async function loadChangelog() {
-  try {
-    const res = await fetch(API);
-
-    if (!res.ok) {
-      throw new Error("Failed to fetch changelog");
+  function getCached() {
+    try {
+      const raw = localStorage.getItem(CACHE_KEY);
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) {
+      return null;
     }
+  }
 
-    const logs = await res.json();
+  function saveCache({ logs, etag, lastModified }) {
+    try {
+      localStorage.setItem(CACHE_KEY, JSON.stringify({
+        logs,
+        etag: etag || null,
+        lastModified: lastModified || null,
+        fetchedAt: Date.now()
+      }));
+    } catch (e) {}
+  }
 
+  function renderLogs(logs) {
     const container = document.getElementById("changelog-logs");
-    container.innerHTML = "".trim();
+    if (!container) return;
+    container.innerHTML = "";
 
     const fragment = document.createDocumentFragment();
 
-    // Sort logs by date (newest first) test debug
     logs.sort((a, b) => new Date(b.date) - new Date(a.date));
 
     logs.forEach(log => {
@@ -88,7 +100,7 @@ async function loadChangelog() {
 
       const list = document.createElement("ul");
 
-      log.changes.forEach(change => {
+      (log.changes || []).forEach(change => {
         const li = document.createElement("li");
         li.textContent = change;
         list.appendChild(li);
@@ -99,12 +111,60 @@ async function loadChangelog() {
     });
 
     container.appendChild(fragment);
+  }
 
+  const cache = getCached();
+
+  if (cache && cache.logs) {
+    renderLogs(cache.logs);
+  }
+
+  try {
+    let needFetch = true;
+
+    if (cache) {
+      try {
+        const headRes = await fetch(API, { method: "HEAD" });
+        if (headRes.ok) {
+          const etag = headRes.headers.get("ETag");
+          const lastModified = headRes.headers.get("Last-Modified");
+          if ((etag && cache.etag && etag === cache.etag) ||
+              (lastModified && cache.lastModified && lastModified === cache.lastModified)) {
+            needFetch = false;
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!needFetch) return;
+
+    const headers = {};
+    if (cache && cache.etag) headers["If-None-Match"] = cache.etag;
+    if (cache && cache.lastModified) headers["If-Modified-Since"] = cache.lastModified;
+
+    const res = await fetch(API, { headers });
+
+    if (res.status === 304) {
+      return;
+    }
+
+    if (!res.ok) {
+      throw new Error("Failed to fetch changelog");
+    }
+
+    const logs = await res.json();
+
+    const newEtag = res.headers.get("ETag");
+    const newLastModified = res.headers.get("Last-Modified");
+
+    saveCache({ logs, etag: newEtag, lastModified: newLastModified });
+    renderLogs(logs);
   } catch (err) {
     console.error("Changelog load error:", err);
-
-    const container = document.getElementById("changelog-logs");
-    container.innerHTML = "<p>Failed to load changelog.</p>";
+    if (!cache || !cache.logs) {
+      const container = document.getElementById("changelog-logs");
+      if (container) container.innerHTML = "<p>Failed to load changelog.</p>";
+    }
   }
 }
 
