@@ -163,7 +163,7 @@ async function loadChangelog() {
     console.error("Changelog load error:", err);
     if (!cache || !cache.logs) {
       const container = document.getElementById("changelog-logs");
-      if (container) container.innerHTML = "<p>Failed to load changelog.</p>";
+      if (container) container.innerHTML = "<p>Failed to load changelog</p>";
     }
   }
 }
