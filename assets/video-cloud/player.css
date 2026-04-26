@@ -425,11 +425,11 @@
   }
 
   #video-seek-feedback.seek-forward {
-    left: 68%;
+    left: 80%;
   }
 
   #video-seek-feedback.seek-backward {
-    left: 32%;
+    left: 10%;
   }
 
   #video-seek-feedback-icon {
