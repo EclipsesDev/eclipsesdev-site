@@ -275,8 +275,8 @@
 
 .video-icon--next, 
 .video-icon--prev {
-  width: clamp(30px, 10vw, 54px);
-  height: clamp(30px, 10vw, 54px);
+  width: clamp(24px, 10vw, 42px);
+  height: clamp(24px, 10vw, 42px);
 }
 
 .video-icon--control {
