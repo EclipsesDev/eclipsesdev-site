@@ -106,12 +106,26 @@
   left: 36%;
 }
 
-#video-next {
-  left: 32%;
+.video-overlay-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(8px, 2vw, 14px);
+  pointer-events: all;
+  z-index: 10004;
 }
 
-#video-prev {
-  left: 16%;
+#video-prev,
+#video-next {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 50%;
+  padding: clamp(8px, 2.2vw, 14px);
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
 }
 
 #video-seek-feedback-icon {
@@ -412,14 +426,6 @@
 
   #video-seek-feedback.seek-backward {
     left: 32%;
-  }
-
-  #video-next {
-    left: 36%;
-  }
-
-  #video-prev {
-    left: 12%;
   }
 
   #video-seek-feedback-icon {
