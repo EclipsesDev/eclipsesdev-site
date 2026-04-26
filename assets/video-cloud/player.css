@@ -52,7 +52,9 @@
   pointer-events: none;
 }
 
-#video-play-toggle {
+#video-play-toggle, 
+#video-next, 
+#video-prev {
   display: flex;
   align-items: center;
   justify-content: center;
@@ -67,7 +69,9 @@
   -webkit-tap-highlight-color: transparent;
 }
 
-#video-play-toggle:hover {
+#video-play-toggle:hover, 
+#video-next:hover, 
+#video-prev:hover {
   transform: scale(1.15);
 }
 
@@ -244,7 +248,9 @@
   filter: brightness(0) invert(1);
 }
 
-.video-icon--play {
+.video-icon--play, 
+.video-icon--next, 
+.video-icon--prev {
   width: clamp(34px, 10vw, 58px);
   height: clamp(34px, 10vw, 58px);
 }
