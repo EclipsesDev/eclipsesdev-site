@@ -86,9 +86,7 @@ const VideoCloudAuth = (() => {
   async function logout() {
     try {
       await request("/logout", { method: "POST" });
-    } catch {
-      // Ignore response errors and force local navigation to login.
-    }
+    } catch {}
     window.location.href = CONFIG.loginPath;
   }
 

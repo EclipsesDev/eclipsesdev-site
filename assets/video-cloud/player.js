@@ -273,12 +273,20 @@ function handleSurfaceClick(event) {
 
   surfaceClickTimer = setTimeout(() => {
     surfaceClickTimer = null;
-    togglePlayback();
   }, SURFACE_DOUBLE_CLICK_DELAY_MS);
 }
 
 for (const surface of [overlay, player]) {
   surface.addEventListener("click", handleSurfaceClick);
+}
+
+const playToggleButton = document.getElementById("video-play-toggle");
+if (playToggleButton) {
+  playToggleButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    togglePlayback();
+  });
 }
 
 if (window.PointerEvent) {
