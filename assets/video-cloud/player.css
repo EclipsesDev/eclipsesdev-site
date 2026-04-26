@@ -268,11 +268,15 @@
   filter: brightness(0) invert(1);
 }
 
-.video-icon--play, 
-.video-icon--next, 
-.video-icon--prev {
+.video-icon--play {
   width: clamp(34px, 10vw, 58px);
   height: clamp(34px, 10vw, 58px);
+}
+
+.video-icon--next, 
+.video-icon--prev {
+  width: clamp(30px, 10vw, 54px);
+  height: clamp(30px, 10vw, 54px);
 }
 
 .video-icon--control {
