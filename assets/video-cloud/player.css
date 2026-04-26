@@ -52,9 +52,7 @@
   pointer-events: none;
 }
 
-#video-play-toggle, 
-#video-next, 
-#video-prev {
+#video-play-toggle {
   display: flex;
   align-items: center;
   justify-content: center;
