@@ -31,9 +31,19 @@
             <video id="video-player" playsinline webkit-playsinline></video>
 
             <div id="video-overlay">
-                <button id="video-play-toggle" type="button" aria-label="Play or pause video">
-                    <img id="video-play-icon" class="video-icon video-icon--play" src="/assets/img/Play.png" alt="Play">
-                </button>
+                <div class="video-overlay-controls">
+                    <button id="video-prev" type="button" aria-label="Previous video">
+                        <img id="video-prev-icon" class="video-icon video-icon--control" src="/assets/img/previous.png" alt="Previous">
+                    </button>
+
+                    <button id="video-play-toggle" type="button" aria-label="Play or pause video">
+                        <img id="video-play-icon" class="video-icon video-icon--play" src="/assets/img/Play.png" alt="Play">
+                    </button>
+
+                    <button id="video-next" type="button" aria-label="Next video">
+                        <img id="video-next-icon" class="video-icon video-icon--control" src="/assets/img/next.png" alt="Next">
+                    </button>
+                </div>
                 <div id="video-seek-feedback" aria-hidden="true">
                     <img id="video-seek-feedback-icon" class="video-icon video-icon--seek-feedback" src="/assets/img/forward.png" alt="Seek feedback">
                 </div>

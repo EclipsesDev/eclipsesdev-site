@@ -336,6 +336,8 @@ async function loadVideos() {
         if (!res.ok) throw new Error("Failed to fetch video list");
 
         const videos = await res.json();
+        // store the loaded video list for player navigation
+        window._videoCloud_videos = Array.isArray(videos) ? videos : [];
         container.innerHTML = "";
 
         if (!videos.length) {
@@ -343,7 +345,7 @@ async function loadVideos() {
             return;
         }
 
-        const cards = videos.map(video => {
+        const cards = videos.map((video, index) => {
             const card = document.createElement("div");
             card.className = "video-card";
 
@@ -355,7 +357,10 @@ async function loadVideos() {
             title.textContent = video.title || `Video #${video.id}`;
             card.appendChild(title);
 
-            card.onclick = () => openVideoFromId(video.id);
+            card.onclick = () => {
+              window._videoCloud_currentIndex = index;
+              openVideoFromId(video.id);
+            };
 
             container.appendChild(card);
             return { video, img };
@@ -382,6 +387,30 @@ async function loadVideos() {
         container.innerHTML = "Failed to load videos.";
     }
 }
+
+window.videoCloudNext = function() {
+  try {
+    const list = window._videoCloud_videos || [];
+    let idx = Number.isFinite(window._videoCloud_currentIndex) ? window._videoCloud_currentIndex : -1;
+    if (list.length === 0) return;
+    const nextIdx = Math.min(list.length - 1, idx + 1 >= 0 ? idx + 1 : 0);
+    window._videoCloud_currentIndex = nextIdx;
+    const nextId = list[nextIdx]?.id;
+    if (nextId != null) openVideoFromId(nextId);
+  } catch (e) { console.error(e); }
+};
+
+window.videoCloudPrev = function() {
+  try {
+    const list = window._videoCloud_videos || [];
+    let idx = Number.isFinite(window._videoCloud_currentIndex) ? window._videoCloud_currentIndex : -1;
+    if (list.length === 0) return;
+    const prevIdx = Math.max(0, idx - 1 >= 0 ? idx - 1 : 0);
+    window._videoCloud_currentIndex = prevIdx;
+    const prevId = list[prevIdx]?.id;
+    if (prevId != null) openVideoFromId(prevId);
+  } catch (e) { console.error(e); }
+};
 
 async function runWithConcurrency(items, concurrency, worker) {
     const queue = [...items];
@@ -416,6 +445,13 @@ async function openVideoFromId(id) {
               })
               .catch(() => {});
         }
+
+        try {
+          const list = window._videoCloud_videos || [];
+          const idx = list.findIndex(v => String(v?.id) === String(id));
+          if (idx >= 0) window._videoCloud_currentIndex = idx;
+        } catch {}
+
     } catch (err) {
         console.error("Video load error:", err);
 

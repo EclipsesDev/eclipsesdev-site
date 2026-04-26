@@ -6,6 +6,8 @@ const playIcon = document.getElementById("video-play-icon");
 const seekFeedback = document.getElementById("video-seek-feedback");
 const seekFeedbackIcon = document.getElementById("video-seek-feedback-icon");
 const closeButton = document.getElementById("video-close");
+const prevButton = document.getElementById("video-prev");
+const nextButton = document.getElementById("video-next");
 const progressBar = document.getElementById("video-progress-bar");
 const progressContainer = document.getElementById("video-progress");
 const controls = document.getElementById("video-controls");
@@ -286,6 +288,22 @@ if (playToggleButton) {
     e.stopPropagation();
     e.preventDefault();
     togglePlayback();
+  });
+}
+
+if (prevButton) {
+  prevButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (typeof window.videoCloudPrev === "function") window.videoCloudPrev();
+  });
+}
+
+if (nextButton) {
+  nextButton.addEventListener("click", (e) => {
+    e.stopPropagation();
+    e.preventDefault();
+    if (typeof window.videoCloudNext === "function") window.videoCloudNext();
   });
 }
 
