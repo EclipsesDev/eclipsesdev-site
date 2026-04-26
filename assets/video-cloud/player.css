@@ -108,6 +108,14 @@
   left: 36%;
 }
 
+#video-next {
+  left: 32%;
+}
+
+#video-prev {
+  left: 16%;
+}
+
 #video-seek-feedback-icon {
   width: 26px;
   height: 26px;
@@ -406,6 +414,14 @@
 
   #video-seek-feedback.seek-backward {
     left: 32%;
+  }
+
+  #video-next {
+    left: 36%;
+  }
+
+  #video-prev {
+    left: 12%;
   }
 
   #video-seek-feedback-icon {
