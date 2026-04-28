@@ -16,6 +16,7 @@ document.addEventListener(EVENTS.LOAD, () => {
     let interval = null;
     let started = false;
     let mistakes = 0;
+    let errorHistory = [];
 
     let currentDifficulty = "easy";
 
@@ -47,6 +48,8 @@ document.addEventListener(EVENTS.LOAD, () => {
             textDisplay.appendChild(span);
         });
 
+        errorHistory = new Array(text.length).fill(false);
+
         if (textDisplay.children.length > 0) {
             textDisplay.children[0].classList.add("current");
         }
@@ -66,6 +69,8 @@ document.addEventListener(EVENTS.LOAD, () => {
                 clearInterval(interval);
                 inputField.disabled = true;
             }
+
+            updateStats();
         }, 1000);
     }
 
@@ -92,6 +97,8 @@ document.addEventListener(EVENTS.LOAD, () => {
             } else {
                 char.classList.add("incorrect");
                 mistakes++;
+
+                errorHistory[index] = true;
             }
         });
 
@@ -104,6 +111,7 @@ document.addEventListener(EVENTS.LOAD, () => {
     });
 
     function updateStats() {
+        const characters = textDisplay.querySelectorAll("span");
         const timeElapsed = 60 - timer;
         const minutes = timeElapsed / 60;
 
@@ -115,11 +123,12 @@ document.addEventListener(EVENTS.LOAD, () => {
             wpmElement.innerText = 0;
         }
 
-        const totalTyped = inputField.value.length;
-        const correctChars = totalTyped - mistakes;
+        // Count accuracy of index that ever had an error as incorrect
+        const targetLength = characters.length || 0;
+        const errorsEver = errorHistory.filter(Boolean).length;
 
-        const accuracy = totalTyped > 0
-            ? Math.round((correctChars / totalTyped) * 100)
+        const accuracy = started && targetLength > 0
+            ? Math.max(0, Math.round(((targetLength - errorsEver) / targetLength) * 100))
             : 100;
 
         accuracyElement.innerText = accuracy;
@@ -134,6 +143,7 @@ document.addEventListener(EVENTS.LOAD, () => {
         timeElement.innerText = timer;
         wpmElement.innerText = 0;
         accuracyElement.innerText = 100;
+        errorHistory = [];
         inputField.focus();
         loadText();
     });
