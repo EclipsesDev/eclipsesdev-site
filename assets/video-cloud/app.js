@@ -520,7 +520,7 @@ async function getThumbnailFromVideo(videoUrl) {
   video.style.height = "1px";
   video.style.opacity = "0";
 
-  const wait = (event, ms = 2500) =>
+  const wait = (event, ms = 3000) =>
     new Promise((resolve, reject) => {
       const t = setTimeout(() => reject(new Error(`Timeout: ${event}`)), ms);
       video.addEventListener(event, () => { clearTimeout(t); resolve(); }, { once: true });
@@ -528,13 +528,16 @@ async function getThumbnailFromVideo(videoUrl) {
     });
 
   const frame = () => {
+    if (video.readyState < 3) return { url: null, black: true };
+
     const c = document.createElement("canvas");
     const w = video.videoWidth || 320;
     const h = video.videoHeight || 180;
     const s = Math.min(1, 480 / w, 270 / h);
     c.width = Math.max(1, Math.round(w * s));
     c.height = Math.max(1, Math.round(h * s));
-    const ctx = c.getContext("2d", { willReadFrequently: true });
+    // const ctx = c.getContext("2d", { willReadFrequently: true });
+    const ctx = c.getContext("2d");
     if (!ctx) return { url: null, black: true };
     ctx.drawImage(video, 0, 0, c.width, c.height);
 
@@ -545,7 +548,7 @@ async function getThumbnailFromVideo(videoUrl) {
       sum += lum; max = Math.max(max, lum); n++;
     }
     return {
-      url: c.toDataURL("image/jpeg", 0.8),
+      url: c.toDataURL("image/jpeg", 0.75),
       black: (sum / Math.max(1, n)) < 14 && max < 40
     };
   };
@@ -554,7 +557,7 @@ async function getThumbnailFromVideo(videoUrl) {
     document.body.appendChild(video);
     video.src = videoUrl;
     video.load();
-    await wait("loadedmetadata", 5000);
+    await wait("loadedmetadata", 7000);
 
     const dur = Number.isFinite(video.duration) ? video.duration : 0;
     const clamp = (t) => Math.min(Math.max(0, t), Math.max(0, dur - 0.1));
@@ -565,7 +568,7 @@ async function getThumbnailFromVideo(videoUrl) {
       try {
         if (t > 0) {
           video.currentTime = t;
-          await wait("seeked", 2500);
+          await wait("seeked", 3000);
         } else {
           await wait("loadeddata", 2500);
         }
@@ -579,10 +582,12 @@ async function getThumbnailFromVideo(videoUrl) {
 
     return fallback;
   } finally {
-    video.pause();
-    video.removeAttribute("src");
-    video.load();
-    video.remove();
+    setTimeout(() => {
+      video.pause();
+      video.removeAttribute("src");
+      video.load();
+      video.remove();
+    }, 500);
   }
 }
 
