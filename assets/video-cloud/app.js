@@ -578,7 +578,7 @@ async function getThumbnailFromVideo(videoUrl) {
           await wait("loadeddata", 2500);
         }
         if (video.readyState < 2) continue;
-        const f = frame();
+        const f = await frame();
         if (!f.url) continue;
         fallback ||= f.url;
         if (!f.black) return f.url;
