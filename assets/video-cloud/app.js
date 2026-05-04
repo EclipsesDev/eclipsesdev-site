@@ -527,7 +527,7 @@ async function getThumbnailFromVideo(videoUrl) {
       video.addEventListener("error", () => { clearTimeout(t); reject(new Error("Video load error")); }, { once: true });
     });
 
-  const frame = async () => {
+  const frame = () => {
     if (video.readyState < 3) return { url: null, black: true };
 
     const c = document.createElement("canvas");
@@ -539,11 +539,6 @@ async function getThumbnailFromVideo(videoUrl) {
     // const ctx = c.getContext("2d", { willReadFrequently: true });
     const ctx = c.getContext("2d");
     if (!ctx) return { url: null, black: true };
-    ctx.fillStyle = '#fff';
-    ctx.fillRect(0, 0, c.width, c.height);
-    
-    ctx.drawImage(video, 0, 0, c.width, c.height);
-    await new Promise(r => setTimeout(r, 50)); // Double attempt??
     ctx.drawImage(video, 0, 0, c.width, c.height);
 
     const d = ctx.getImageData(0, 0, c.width, c.height).data;
@@ -578,7 +573,7 @@ async function getThumbnailFromVideo(videoUrl) {
           await wait("loadeddata", 2500);
         }
         if (video.readyState < 2) continue;
-        const f = await frame();
+        const f = frame();
         if (!f.url) continue;
         fallback ||= f.url;
         if (!f.black) return f.url;
