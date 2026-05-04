@@ -557,7 +557,8 @@ async function getThumbnailFromVideo(videoUrl) {
     document.body.appendChild(video);
     video.src = videoUrl;
     video.load();
-    await wait("loadedmetadata", 7000);
+    
+    await wait("canplay", 7000);
 
     const dur = Number.isFinite(video.duration) ? video.duration : 0;
     const clamp = (t) => Math.min(Math.max(0, t), Math.max(0, dur - 0.1));
