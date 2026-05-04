@@ -539,6 +539,11 @@ async function getThumbnailFromVideo(videoUrl) {
     // const ctx = c.getContext("2d", { willReadFrequently: true });
     const ctx = c.getContext("2d");
     if (!ctx) return { url: null, black: true };
+    ctx.fillStyle = '#fff';
+    ctx.fillRect(0, 0, c.width, c.height);
+    
+    ctx.drawImage(video, 0, 0, c.width, c.height);
+    await new Promise(r => setTimeout(r, 50)); // Double attempt??
     ctx.drawImage(video, 0, 0, c.width, c.height);
 
     const d = ctx.getImageData(0, 0, c.width, c.height).data;
