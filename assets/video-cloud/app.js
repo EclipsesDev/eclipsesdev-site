@@ -527,7 +527,7 @@ async function getThumbnailFromVideo(videoUrl) {
       video.addEventListener("error", () => { clearTimeout(t); reject(new Error("Video load error")); }, { once: true });
     });
 
-  const frame = () => {
+  const frame = async () => {
     if (video.readyState < 3) return { url: null, black: true };
 
     const c = document.createElement("canvas");
