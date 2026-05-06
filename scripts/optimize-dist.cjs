@@ -236,8 +236,16 @@ function main() {
   const jsFiles = fg.sync([`${distDir.replace(/\\/g, "/")}/**/*.js`], { onlyFiles: true })
     .filter((filePath) => !shouldSkipMinified(filePath));
 
+  const isExcludedFromSelectors = (filePath) => {
+    return /[\\\/]404\.html$/.test(filePath);
+  };
+
+  const htmlFilesForSelectors = htmlFiles.filter((p) => !isExcludedFromSelectors(p));
+  const cssFilesForSelectors = cssFiles.filter((p) => !isExcludedFromSelectors(p));
+  const jsFilesForSelectors = jsFiles.filter((p) => !isExcludedFromSelectors(p));
+
   if (envFlag("OBFUSCATE_SELECTORS", false)) {
-    runSelectorObfuscation(htmlFiles, cssFiles, jsFiles);
+    runSelectorObfuscation(htmlFilesForSelectors, cssFilesForSelectors, jsFilesForSelectors);
   }
 
   runHtmlMinification(htmlFiles);

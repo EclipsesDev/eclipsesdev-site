@@ -7,7 +7,78 @@
   <title>Page Not Found</title>
 
   <link rel="icon" type="image/png" href="https://i.imgur.com/gZrTQE4.jpg">
-  <link rel="stylesheet" href="assets/404/app.css">
+  <style>
+    body {
+      background: #1a1f2b;
+      color: white;
+      font-family: "Segoe UI", Arial, sans-serif;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+    }
+
+    .container {
+      text-align: center;
+      align-items: center;
+      align-content: center;
+    }
+
+    .error-code {
+      font-size: 200px;
+      font-weight: bold;
+      color: #ef4444;
+      margin: 0;
+    }
+
+    .error-message {
+      font-size: 24px;
+      color: #ff8585;
+      margin: 10px 0 20px 0;
+    }
+
+    .go-home {
+      padding: 12px 25px;
+      font-size: 18px;
+      border-radius: 8px;
+      background: #22c55e;
+      border: none;
+      color: white;
+      cursor: pointer;
+      transition: background 0.3s;
+      text-decoration: none;
+    }
+
+    .go-home:hover {
+      background: #16a34a;
+    }
+
+    .animated {
+      animation: float 2s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+      50% {
+        transform: translateY(-10px);
+      }
+    }
+
+    @media (max-width: 600px) {
+      .error-code {
+        font-size: 80px;
+      }
+      .error-message {
+        font-size: 18px;
+      }
+    }
+  </style>
 </head>
 <body>
   <div class="container">
