@@ -465,7 +465,7 @@ async function openVideoFromId(id) {
           if (idx >= 0) window._videoCloud_currentIndex = idx;
           try {
             const newUrl = `/projects/video-cloud/${id}`;
-            const newTitle = videoMeta?.title ? `${videoMeta.title} — Video Cloud` : document.title;
+            const newTitle = videoMeta?.title ? `${videoMeta.title} - Video Cloud` : document.title;
             window.history.pushState({ videoId: id }, "", newUrl);
             document.title = newTitle;
           } catch (e) {}
