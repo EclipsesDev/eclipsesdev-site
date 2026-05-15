@@ -193,6 +193,14 @@ function openVideoPlayer(url, options = {}) {
   setIdleState(false);
   clearIdleTimer();
   updatePlayIcon();
+  
+  const vid = options.videoId || options.id || null;
+  if (vid) {
+    try {
+      const newUrl = `/projects/video-cloud/${vid}`;
+      window.history.pushState({ videoId: vid }, "", newUrl);
+    } catch (e) {}
+  }
 }
 
 window.openVideoPlayer = openVideoPlayer;
@@ -456,9 +464,18 @@ function closeVideoPlayer() {
   setIdleState(false);
   clearIdleTimer();
   updatePlayIcon();
+  // restore base URL when closing the player
+  try {
+    const parts = window.location.pathname.split('/').filter(Boolean);
+    if (parts.length >= 2 && parts[0] === 'projects' && parts[1] === 'video-cloud') {
+      window.history.replaceState({}, '', '/projects/video-cloud/');
+    }
+  } catch (e) {}
 }
 
 closeButton.addEventListener("click", closeVideoPlayer);
+// expose to other scripts
+window.closeVideoPlayer = closeVideoPlayer;
 
 lightbox.addEventListener("click", (event) => {
   if (event.target === lightbox) closeVideoPlayer();

@@ -320,7 +320,13 @@ async function initPanelPage() {
   logoutButton?.addEventListener("click", VideoCloudAuth.logout);
 
   renderSessionInfo(session);
-  loadVideos();
+  await loadVideos();
+
+  // If the page was opened with a deep link (path or ?id=), open that video
+  const deepId = getVideoIdFromLocation();
+  if (deepId) {
+    try { openVideoFromId(deepId); } catch (e) {}
+  }
 }
 
 async function loadVideos() {
@@ -346,6 +352,16 @@ async function loadVideos() {
         }
 
         const cards = videos.map((video, index) => {
+            // create an anchor so users can copy/share the direct URL
+            const anchor = document.createElement("a");
+            anchor.href = `/projects/video-cloud/${video.id}`;
+            anchor.className = "video-card-link";
+            anchor.onclick = (e) => {
+              e.preventDefault();
+              window._videoCloud_currentIndex = index;
+              openVideoFromId(video.id);
+            };
+
             const card = document.createElement("div");
             card.className = "video-card";
 
@@ -357,12 +373,8 @@ async function loadVideos() {
             title.textContent = video.title || `Video #${video.id}`;
             card.appendChild(title);
 
-            card.onclick = () => {
-              window._videoCloud_currentIndex = index;
-              openVideoFromId(video.id);
-            };
-
-            container.appendChild(card);
+            anchor.appendChild(card);
+            container.appendChild(anchor);
             return { video, img };
         });
 
@@ -449,7 +461,14 @@ async function openVideoFromId(id) {
         try {
           const list = window._videoCloud_videos || [];
           const idx = list.findIndex(v => String(v?.id) === String(id));
+          const videoMeta = idx >= 0 ? list[idx] : null;
           if (idx >= 0) window._videoCloud_currentIndex = idx;
+          try {
+            const newUrl = `/projects/video-cloud/${id}`;
+            const newTitle = videoMeta?.title ? `${videoMeta.title} — Video Cloud` : document.title;
+            window.history.pushState({ videoId: id }, "", newUrl);
+            document.title = newTitle;
+          } catch (e) {}
         } catch {}
 
     } catch (err) {
@@ -906,6 +925,32 @@ async function getThumbnailFromVideo(videoUrl) {
 //         alert("Video failed to load");
 //     }
 // }
+
+function getVideoIdFromLocation() {
+  try {
+    const u = new URL(window.location.href);
+    const searchId = u.searchParams.get("id") || u.searchParams.get("v") || u.searchParams.get("video");
+    if (searchId) return searchId;
+    const parts = window.location.pathname.split("/").filter(Boolean);
+    if (parts.length >= 3 && parts[0] === "projects" && parts[1] === "video-cloud") {
+      const maybe = parts[2];
+      if (maybe && maybe !== "index.html") return maybe;
+    }
+  } catch (e) {}
+  return null;
+}
+
+// handle back/forward navigation to open/close videos based on URL
+window.addEventListener("popstate", (e) => {
+  const id = getVideoIdFromLocation();
+  if (id) {
+    try { openVideoFromId(id); } catch (ex) {}
+  } else {
+    if (typeof closeVideoPlayer === "function") {
+      try { closeVideoPlayer(); } catch (ex) {}
+    }
+  }
+});
 
 document.addEventListener(EVENTS.LOAD, async () => { 
   const isLoginPage = window.location.pathname.endsWith("/login/") || window.location.pathname.endsWith("/login"); 
